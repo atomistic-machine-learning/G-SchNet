@@ -8,6 +8,7 @@ from ase.db import connect
 from scipy.spatial.distance import pdist
 from utility_classes import ConnectivityCompressor, Molecule
 from multiprocessing import Process, Queue
+from pathlib import Path
 
 
 def get_parser():
@@ -89,7 +90,8 @@ def get_count_statistics(mol=None, get_stat_heads=False):
 
 
 def preprocess_molecules(mol_idcs, source_db, valence,
-                         precompute_distances=True, print_progress=False):
+                         precompute_distances=True, remove_invalid=True,
+                         invalid_list=None, print_progress=False):
     '''
     Checks the validity of selected molecules and collects atom, bond,
     and ring count statistics for the valid structures. Molecules are classified as
@@ -105,8 +107,16 @@ def preprocess_molecules(mol_idcs, source_db, valence,
             constraint of atoms with atomic charge i (e.g. a valency of 4 at array
             position 6 representing carbon)
         precompute_distances (bool, optional): if True, the pairwise distances between
-            atoms in each molecule are computed and stored in the database
+            atoms in each molecule are computed and stored in the database (default:
+            True)
+        remove_invalid (bool, optional): if True, molecules that do not pass the
+            valency or connectivity checks (or are on the invalid_list) are removed from
+            the new database (default: True)
+        invalid_list (list of int, optional): precomputed list containing indices of
+            molecules that are marked as invalid (because they did not pass the
+            valency or connectivity checks in earlier runs, default: None)
         print_progress (bool, optional): set True to print the progress in percent
+            (default: False)
 
     Returns
         mols (list of ase.Atoms): list of all valid molecules
@@ -115,8 +125,6 @@ def preprocess_molecules(mol_idcs, source_db, valence,
             and ring count statistics
         inval (list of int): list with indices of molecules that failed the valency
             check
-        insane (list of int): list with indices of molecules that failed a simple
-            sanity check
         disc (list of int): list with indices of molecules that consist of disconnected
             parts
         count (int): number of molecules processed
@@ -125,7 +133,6 @@ def preprocess_molecules(mol_idcs, source_db, valence,
     count = 0  # count the number of invalid molecules
     disc = []  # store indices of disconnected molecules
     inval = []  # store indices of invalid molecules
-    insane = []  # store indices of molecules that fail the sanity check
     data_list = []  # store data fields of molecules for new db
     mols = []  # store molecules (as ase.Atoms objects)
     compressor = ConnectivityCompressor()  # (de)compress sparse connectivity matrices
@@ -136,6 +143,10 @@ def preprocess_molecules(mol_idcs, source_db, valence,
         # iterate over provided indices
         for i in mol_idcs:
             i = int(i)
+            # skip molecule if present in invalid_list and remove_invalid is True
+            if remove_invalid and invalid_list is not None:
+                if i in invalid_list:
+                    continue
             # get molecule from database
             row = source_db.get(i + 1)
             data = row.data
@@ -158,16 +169,11 @@ def preprocess_molecules(mol_idcs, source_db, valence,
             # get connectivity matrix (detecting bond orders with Open Babel)
             con_mat = mol.get_connectivity()
             # stop if molecule is disconnected (and therefore invalid)
-            if is_disconnected(con_mat):
-                count += 1
-                disc += [i]
-                continue
-            # stop if sanity check fails
-            # (can sum of valence of all atoms be divided by 2?)
-            if not mol.sanity_check():
-                count += 1
-                insane += [i]
-                continue
+            if remove_invalid:
+                if is_disconnected(con_mat):
+                    count += 1
+                    disc += [i]
+                    continue
 
             # check if valency constraints of all atoms in molecule are satisfied:
             # since the detection of bond orders for the connectivity matrix with Open
@@ -195,11 +201,12 @@ def preprocess_molecules(mol_idcs, source_db, valence,
                     mol = Molecule(pos[random_ord], numbers[random_ord])
                     con_mat = mol.get_connectivity()
                     nums = numbers[random_ord]
-            if not val:
-                # stop if molecule is invalid (it failed the repeated valence checks)
-                count += 1
-                inval += [i]
-                continue
+            if remove_invalid:
+                if not val:
+                    # stop if molecule is invalid (it failed the repeated valence checks)
+                    count += 1
+                    inval += [i]
+                    continue
 
             if precompute_distances:
                 # calculate pairwise distances of atoms and store them in data
@@ -225,7 +232,7 @@ def preprocess_molecules(mol_idcs, source_db, valence,
                     print('\033[K', end='\r', flush=True)
                     print(f'{100 * (i + 1) / n_all:.2f}%', end='\r', flush=True)
 
-    return mols, data_list, stats, inval, insane, disc, count
+    return mols, data_list, stats, inval, disc, count
 
 
 def _processing_worker(q_in, q_out, task):
@@ -280,14 +287,16 @@ def _submit_jobs(qs_out, count, chunk_size, n_all, working_flag,
 
 
 def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
-                       logging_print=True, new_db_path=None, precompute_distances=True):
+                       logging_print=True, new_db_path=None, precompute_distances=True,
+                       remove_invalid=True, invalid_list=None):
     '''
     Pre-processes all molecules of a dataset using the provided valency information.
     Multi-threading is used to speed up the process.
-    Along with a new database containing the pre-processed molecules, files holding
-    the indices of removed molecules (which do not pass the sanity, valence,
-    or connectivity checks) and a "statistics.npz" file (containing atom, bond,
-    and ring count statistics for all molecules in the new database) are stored.
+    Along with a new database containing the pre-processed molecules, a
+    "input_db_invalid.txt" file holding the indices of removed molecules (which
+    do not pass the valence or connectivity checks, omitted if remove_invalid is False)
+    and a "new_db_statistics.npz" file (containing atom, bond, and ring count statistics
+    for all molecules in the new database) are stored.
 
     Args:
         datapath (str): full path to dataset (ase.db database)
@@ -302,8 +311,23 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
             molecules shall be stored (None to simply append "gen" to the name in
             datapath, default: None)
         precompute_distances (bool, optional): if True, the pairwise distances between
-            atoms in each molecule are computed and stored in the database
+            atoms in each molecule are computed and stored in the database (default:
+            True)
+        remove_invalid (bool, optional): if True, molecules that do not pass the
+            valency or connectivity check are removed from the new database (note
+            that a precomputed list of invalid molecules determined using the code in
+            this file is fetched from our repository if possible, default: True)
+        invalid_list (list of int, optional): precomputed list containing indices of
+            molecules that are marked as invalid (because they did not pass the
+            valency or connectivity checks in earlier runs, default: None)
     '''
+    # convert paths
+    datapath = Path(datapath)
+    if new_db_path is None:
+        new_db_path = datapath.parent / (datapath.stem + 'gen.db')
+    else:
+        new_db_path = Path(new_db_path)
+
     # compute array where the valency constraint of atom type i is stored at entry i
     max_type = max(valence_list[::2])
     valence = np.zeros(max_type + 1, dtype=int)
@@ -333,12 +357,14 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
     count = 0  # count number of discarded (invalid etc.) molecules
     disc = []
     inval = []
-    insane = []
     stats = np.empty((len(get_count_statistics(get_stat_heads=True)), 0))
     working_flag = np.zeros(n_threads, dtype=bool)
     start_time = time.time()
-    if new_db_path is None:
-        new_db_path = datapath[:-3] + 'gen.db'
+    if invalid_list is not None and remove_invalid:
+        invalid_list = {*invalid_list}
+        n_inval = len(invalid_list)
+    else:
+        n_inval = 0
 
     with connect(new_db_path) as new_db:
 
@@ -359,7 +385,9 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
                                    preprocess_molecules(x,
                                                         datapath,
                                                         valence,
-                                                        precompute_distances)))]
+                                                        precompute_distances,
+                                                        remove_invalid,
+                                                        invalid_list)))]
                 threads[-1].start()
 
             # submit first round of jobs
@@ -386,12 +414,11 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
 
                 # store gathered results
                 for res in results:
-                    mols, data_list, _stats, _inval, _insane, _disc, _c = res
+                    mols, data_list, _stats, _inval, _disc, _c = res
                     for (at, data) in zip(mols, data_list):
                         new_db.write(at, data=data)
                     stats = np.hstack((stats, _stats))
                     inval += _inval
-                    insane += _insane
                     disc += _disc
                     count += _c
 
@@ -414,23 +441,37 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
 
         else:
             results = preprocess_molecules(range(n_all), datapath, valence,
-                                           print_progress=True)
-            mols, data_list, stats, inval, insane, disc, count = results
+                                           precompute_distances, remove_invalid,
+                                           invalid_list, print_progress=True)
+            mols, data_list, stats, inval, disc, count = results
             for (at, data) in zip(mols, data_list):
                 new_db.write(at, data=data)
 
     if not logging_print:
         _print('\033[K', end='\n', flush=True)
-    _print(f'... successfully validated {n_all - count} data points!', flush=True)
-    _print(f'Identified {len(insane)} structures that failed the sanity check,'
-           f' {len(disc)} disconnected structures, and {len(inval)} structures'
-           f' with invalid valence!', flush=True)
+    _print(f'... successfully validated {n_all - count - n_inval} data '
+           f'points!', flush=True)
+    if invalid_list is not None:
+        _print(f'{n_inval} structures were removed because they are on the '
+               f'pre-computed list of invalid molecules!', flush=True)
+        if len(disc)+len(inval) > 0:
+            _print(f'CAUTION: Could not validate {len(disc)+len(inval)} additional '
+                   f'molecules. These were also removed and their indices are '
+                   f'appended to the list of invalid molecules stored at '
+                   f'{datapath.parent / (datapath.stem + f"_invalid.txt")}',
+                   flush=True)
+            np.savetxt(datapath.parent / (datapath.stem + f'_invalid.txt'),
+                       np.append(np.sort(list(invalid_list)), np.sort(inval + disc)),
+                       fmt='%d')
+    elif remove_invalid:
+        _print(f'Identified {len(disc)} disconnected structures, and {len(inval)} '
+               f'structures with invalid valence!', flush=True)
+        np.savetxt(datapath.parent / (datapath.stem + f'_invalid.txt'),
+                   np.sort(inval + disc), fmt='%d')
     _print('\nCompressing and storing statistics with numpy...')
-    np.savez_compressed(datapath[:-3] + f'gen_statistics.npz', stats=stats,
+    np.savez_compressed(new_db_path.parent/(new_db_path.stem+f'_statistics.npz'),
+                        stats=stats,
                         stat_heads=get_count_statistics(get_stat_heads=True))
-    np.savetxt(datapath[:-3] + f'gen_disconnected.txt', disc, fmt='%d')
-    np.savetxt(datapath[:-3] + f'gen_invalid_valence.txt', inval, fmt='%d')
-    np.savetxt(datapath[:-3] + f'gen_insane.txt', insane, fmt='%d')
 
     end_time = time.time() - start_time
     m, s = divmod(end_time, 60)

@@ -29,17 +29,23 @@ class QM9gen(DownloadableAtomsData):
         G-SchNet model, and load the data into pytorch.
 
         Args:
-            path (str): path to directory containing qm9 database.
-            subset (list, optional): indices of subset. Set to None for entire dataset
+            path (str): path to directory containing qm9 database
+            subset (list, optional): indices of subset, set to None for entire dataset
                 (default: None).
-            download (bool, optional): enable downloading if database does not exists
-                (default: True).
-            precompute_distances (bool, optional): if True and the dataset is not yet
-                downloaded, the pairwise distances of atoms in the dataset's molecules
-                will be computed during pre-processing and stored in the database
-                (increases storage demand of the dataset but decreases computational
-                cost during training as otherwise the distances will be computed once
-                in every epoch, default: True)
+            download (bool, optional): enable downloading if qm9 database does not
+                exists (default: True)
+            precompute_distances (bool, optional): if True and the pre-processed
+                database does not yet exist, the pairwise distances of atoms in the
+                dataset's molecules will be computed during pre-processing and stored in
+                the database (increases storage demand of the dataset but decreases
+                computational cost during training as otherwise the distances will be
+                computed once in every epoch, default: True)
+            remove_invalid (bool, optional): if True QM9 molecules that do not pass the
+                valency check will be removed from the training data (note 1: the
+                validity is per default inferred from a pre-computed list in our
+                repository but will be assessed locally if the download fails,
+                note2: only works if the pre-processed database does not yet exist,
+                default: True)
 
         References:
             .. [#qm9_1] https://ndownloader.figshare.com/files/3195404
@@ -83,11 +89,13 @@ class QM9gen(DownloadableAtomsData):
 
     connectivity_compressor = ConnectivityCompressor()
 
-    def __init__(self, path, subset=None, download=True, precompute_distances=True):
+    def __init__(self, path, subset=None, download=True, precompute_distances=True,
+                 remove_invalid=True):
         self.path = path
         self.dbpath = os.path.join(self.path, f'qm9gen.db')
         self.atomref_path = os.path.join(self.path, 'atomref.npz')
         self.precompute_distances = precompute_distances
+        self.remove_invalid = remove_invalid
 
         super().__init__(self.dbpath, subset=subset,
                          available_properties=self.properties,
@@ -246,13 +254,35 @@ class QM9gen(DownloadableAtomsData):
         return True
 
     def _preprocess_qm9(self):
+        # try to download pre-computed list of invalid molecules
+        logging.info('Downloading pre-computed list of invalid QM9 molecules...')
+        raw_path = os.path.join(self.path, 'qm9_invalid.txt')
+        url = 'https://github.com/atomistic-machine-learning/G-SchNet/blob/master/' \
+              'qm9_invalid.txt?raw=true'
+
+        try:
+            request.urlretrieve(url, raw_path)
+            logging.info('Done.')
+            invalid_list = np.loadtxt(raw_path)
+        except HTTPError as e:
+            logging.error('HTTP Error:', e.code, url)
+            logging.info('CAUTION: Could not download pre-computed list, will assess '
+                         'validity during pre-processing.')
+            invalid_list = None
+        except URLError as e:
+            logging.error('URL Error:', e.reason, url)
+            logging.info('CAUTION: Could not download pre-computed list, will assess '
+                         'validity during pre-processing.')
+            invalid_list = None
         # check validity of molecules and store connectivity matrices and interatomic
         # distances in database as a preprocessing step
         qm9_db = os.path.join(self.path, f'qm9.db')
         preprocess_dataset(datapath=qm9_db, valence_list=[1, 1, 6, 4, 7, 3, 8, 2, 9, 1],
                            n_threads=8, n_mols_per_thread=125, logging_print=True,
                            new_db_path=self.dbpath,
-                           precompute_distances=self.precompute_distances)
+                           precompute_distances=self.precompute_distances,
+                           remove_invalid=self.remove_invalid,
+                           invalid_list=invalid_list)
         return True
 
     def get_available_properties(self, available_properties):
