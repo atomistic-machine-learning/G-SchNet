@@ -384,9 +384,10 @@ def train(args, model, train_loader, val_loader, device):
                                 checkpoint_interval=args.checkpoint_every_n_epochs,
                                 keep_n_checkpoints=10)
 
-    # reset optimizer and hooks if starting from pretrained model (e.g. for fine-tuning)
+    # reset optimizer and hooks if starting from pre-trained model (e.g. for
+    # fine-tuning)
     if args.pretrained:
-        logging.info('starting from pretrained model...')
+        logging.info('starting from pre-trained model...')
         # reset epoch and step
         trainer.epoch = 0
         trainer.step = 0

@@ -866,7 +866,7 @@ def generate_molecules(amount,
     s = lambda x: x[:, n_tokens:].detach().cpu().numpy()
 
     # define function that builds a model input batch with current state of molecules
-    def build_batch(i, update_angles=False):
+    def build_batch(i):
         amount = torch.sum(unfinished)  # only get predictions for unfinished molecules
         # build neighborhood and neighborhood mask
         neighbors_i = neighbors[:i, :i-1].expand(amount, -1, -1).contiguous()

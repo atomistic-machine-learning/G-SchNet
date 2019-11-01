@@ -34,10 +34,14 @@ def get_parser():
 def is_disconnected(connectivity):
     '''
     Assess whether all atoms of a molecule are connected using a connectivity matrix
-    :param connectivity (2d numpy.array): matrix (n_atoms x n_atoms) indicating bonds
-        between atoms
-    :return: True if the molecule consists of at least two disconnected graphs,
-        False if all atoms are connected by some path
+
+    Args:
+        connectivity (numpy.ndarray): matrix (n_atoms x n_atoms) indicating bonds
+            between atoms
+
+    Returns
+        bool: True if the molecule consists of at least two disconnected graphs,
+            False if all atoms are connected by some path
     '''
     con_mat = connectivity
     seen, queue = {0}, collections.deque([0])  # start at node (atom) 0
@@ -56,12 +60,17 @@ def is_disconnected(connectivity):
 def get_count_statistics(mol=None, get_stat_heads=False):
     '''
     Collects atom, bond, and ring count statistics of a provided molecule
-    :param mol (utility_classes.Molecule): Molecule to be examined
-    :param get_stat_heads: set True to only return the headers of gathered statistics
-    :return: 2d numpy.array (n_statistics x 1) containing the gathered statistics. Use
-        get_stat_heads parameter to obtain the corresponding row headers (where RX
-        describes number of X-membered rings and CXC indicates the number of
-        carbon-carbon bonds of order X etc.).
+
+    Args:
+        mol (utility_classes.Molecule): Molecule to be examined
+        get_stat_heads (bool, optional): set True to only return the headers of
+            gathered statistics (default: False)
+
+    Returns:
+        numpy.ndarray: (n_statistics x 1) array containing the gathered statistics. Use
+            get_stat_heads parameter to obtain the corresponding row headers (where RX
+            describes number of X-membered rings and CXC indicates the number of
+            carbon-carbon bonds of order X etc.).
     '''
     stat_heads = ['n_atoms', 'C', 'N', 'O', 'F', 'H', 'H1C', 'H1N',
                   'H1O', 'C1C', 'C2C', 'C3C', 'C1N', 'C2N', 'C3N', 'C1O',
@@ -240,12 +249,13 @@ def _processing_worker(q_in, q_out, task):
     Simple worker function that repeatedly fulfills a task using transmitted input and
     sends back the results until a stop signal is received. Can be used as target in
     a multiprocessing.Process object.
-    :param q_in (multiprocessing.Queue): queue to receive a list with data. The first
-        entry signals whether worker can stop. The remaining entries are used as
-        input arguments to the task function.
-    :param q_out (multiprocessing.Queue): queue to send results from task back
-    :param task (function): function that is called using the received data
-    :return: None
+
+    Args:
+        q_in (multiprocessing.Queue): queue to receive a list with data. The first
+            entry signals whether worker can stop and the remaining entries are used as
+            input arguments to the task function
+        q_out (multiprocessing.Queue): queue to send results from task back
+        task (callable function): function that is called using the received data
     '''
     while True:
         data = q_in.get(True)  # receive data
@@ -259,17 +269,21 @@ def _submit_jobs(qs_out, count, chunk_size, n_all, working_flag,
                  n_per_thread):
     '''
     Function that submits a job to preprocess molecules to every provided worker.
-    :param qs_out (list): list of multiprocessing.Queue to send data to workers (one
-        queue per worker)
-    :param count (int): index of the earliest, not yet preprocessed molecule in the db
-    :param chunk_size (int): number of molecules to be divided amongst workers
-    :param n_all (int): total number of molecules in the db
-    :param working_flag (array): flags indicating whether workers are running
-    :param n_per_thread (int): number of molecules to be given to each thread
-    :return:
-        working_flag: array with flags indicating whether workers got a job
-        new_count: index of the new earliest, not yet preprocessed molecule in the db
-            (after the submitted preprocessing jobs have been done)
+
+    Args:
+        qs_out (list of multiprocessing.Queue): queues used to send data to workers (one
+            queue per worker)
+        count (int): index of the earliest, not yet preprocessed molecule in the db
+        chunk_size (int): number of molecules to be divided amongst workers
+        n_all (int): total number of molecules in the db
+        working_flag (array): flags indicating whether workers are running
+        n_per_thread (int): number of molecules to be given to each thread
+
+    Returns:
+        working_flag (numpy.ndarray): array with flags indicating whether workers got
+            a job
+        new_count (int): index of the new earliest, not yet preprocessed molecule in
+            the db (after the submitted preprocessing jobs have been done)
     '''
     # calculate indices of molecules that shall be preprocessed by workers
     idcs = np.arange(count, min(n_all, count + chunk_size))

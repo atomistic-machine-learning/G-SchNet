@@ -70,7 +70,8 @@ class Molecule:
         '''
         Check whether the sum of valence of all atoms can be divided by 2.
 
-        :return: True if the test is passed, False otherwise
+        Returns:
+             bool: True if the test is passed, False otherwise
         '''
         count = 0
         for atom in self.numbers:
@@ -84,7 +85,8 @@ class Molecule:
         '''
         Retrieve the underlying Open Babel OBMol object.
 
-        :return: OBMol object
+        Returns:
+             OBMol object: Open Babel OBMol representation
         '''
         if self._obmol is None:
             if self.positions is None:
@@ -116,8 +118,9 @@ class Molecule:
         Retrieve the molecular fingerprint (the path-based FP2 from Open Babel is used,
         which means that paths of length up to 7 are considered).
 
-        :return: pybel.Fingerprint object (use "fp1 | fp2" to calculate the Tanimoto
-            coefficient of two fingerprints)
+        Returns:
+             pybel.Fingerprint object: moleculer fingerprint (use "fp1 | fp2" to
+                calculate the Tanimoto coefficient of two fingerprints)
         '''
         if self._fp is None:
             # calculate fingerprint
@@ -128,7 +131,8 @@ class Molecule:
         '''
         Retrieve the bits set in the molecular fingerprint.
 
-        :return: python Set object containing the bits set in the molecular fingerprint
+        Returns:
+             Set of int: object containing the bits set in the molecular fingerprint
         '''
         if self._fp_bits is None:
             self._fp_bits = {*self.get_fp().bits}
@@ -138,7 +142,8 @@ class Molecule:
         '''
         Retrieve the canonical SMILES representation of the molecule.
 
-        :return: canonical SMILES string
+        Returns:
+             String: canonical SMILES string
         '''
         if self._can is None:
             # calculate canonical SMILES
@@ -147,10 +152,11 @@ class Molecule:
 
     def get_mirror_can(self):
         '''
-        Retrieve the canonical SMILES representation of the mirrored molecules (the
+        Retrieve the canonical SMILES representation of the mirrored molecule (the
         z-coordinates are flipped).
 
-        :return: canonical SMILES string
+        Returns:
+             String: canonical SMILES string of the mirrored molecule
         '''
         if self._mirror_can is None:
             # calculate canonical SMILES of mirrored molecule
@@ -163,7 +169,8 @@ class Molecule:
         '''
         Retrieve the InChI-key of the molecule.
 
-        :return: InChI-key string
+        Returns:
+             String: InChI-key
         '''
         if self._inchi_key is None:
             # calculate inchi key
@@ -188,8 +195,9 @@ class Molecule:
         '''
         Retrieve the connectivity matrix of the molecule.
 
-        :return: (n_atoms x n_atoms) numpy.array containing the pairwise bond orders
-            between atoms (0 for no bond).
+        Returns:
+            numpy.ndarray: (n_atoms x n_atoms) array containing the pairwise bond orders
+                between atoms (0 for no bond).
         '''
         if self._connectivity is None:
             # get connectivity matrix
@@ -215,7 +223,8 @@ class Molecule:
         of smallest rings (S-SSSR from RdKit) in the molecule (e.g. [5, 6, 5] for two
         rings of size 5 and one ring of size 6).
 
-        :return: list with ring sizes
+        Returns:
+             List of int: list with ring sizes
         '''
         if self._rings is None:
             # calculate symmetric SSSR with RdKit using the canonical smiles
@@ -234,7 +243,7 @@ class Molecule:
         Retrieve the number of atoms in the molecule per type.
 
         Returns:
-            numpy.array: number of atoms in the molecule per type, where the order
+            numpy.ndarray: number of atoms in the molecule per type, where the order
                 corresponds to the order specified in Molecule.type_infos
         '''
         if self._n_atoms_per_type is None:
@@ -248,7 +257,9 @@ class Molecule:
         Some attributes of the class cannot be processed by pickle. This method
         allows to remove these attributes prior to pickling.
 
-        :param restorable: Set True to allow restoring the deleted attributes later on
+        Args:
+            restorable (bool, optional): Set True to allow restoring the deleted
+                attributes later on (default: True)
         '''
         # set attributes which are not picklable (SwigPyObjects) to None
         if restorable and self.positions is None and self._obmol is not None:
@@ -262,14 +273,16 @@ class Molecule:
         '''
         Get the Tanimoto (fingerprint) similarity to another molecule.
 
-        :param other_mol (Molecule or pybel.Fingerprint/list of bits set):
+        Args:
+         other_mol (Molecule or pybel.Fingerprint/list of bits set):
             representation of the second molecule (if it is not a Molecule object,
             it needs to be a pybel.Fingerprint if use_bits is False and a list of bits
             set in the fingerprint if use_bits is True).
-        :param use_bits (bool, optional): set True to calculate Tanimoto similarity
+         use_bits (bool, optional): set True to calculate Tanimoto similarity
             from bits set in the fingerprint (default: True)
 
-        :return: Tanimoto similarity
+        Returns:
+             float: Tanimoto similarity to the other molecule
         '''
         if use_bits:
             a = self.get_fp_bits()
@@ -288,9 +301,9 @@ class Molecule:
         '''
         Updates the bond orders in the underlying OBMol object.
 
-        :param idc_lists ([list1 of int, list2 of int]): nested list containing
-            bonds, i.e. pairs of row indices (list1) and column indices (list2) which
-            shall be updated
+        Args:
+            idc_lists (list of list of int): nested list containing bonds, i.e. pairs
+                of row indices (list1) and column indices (list2) which shall be updated
         '''
         con_mat = self.get_connectivity()
         self._obmol.BeginModify()
@@ -314,11 +327,13 @@ class Molecule:
         obtained with Open Babel, which seems to have problems with assigning correct
         bond orders to aromatic rings containing Nitrogen).
 
-        :param recursive_call (bool, do not set True): flag that indicates a recursive
-            call (used internally, do not set to True)
+        Args:
+            recursive_call (bool, do not set True): flag that indicates a recursive
+                call (used internally, do not set to True)
 
-        :return: (n_atoms x n_atoms) np.array containing the pairwise bond orders
-            between atoms (0 for no bond) after the attempted fix.
+        Returns:
+            numpy.ndarray: (n_atoms x n_atoms) array containing the pairwise bond orders
+                between atoms (0 for no bond) after the attempted fix.
         '''
 
         # if fix has already been attempted, return the connectivity matrix
@@ -470,7 +485,8 @@ class Molecule:
         '''
         Retrieve the valency constraints of all atoms in the molecule.
 
-        :return: numpy.array with valency constraints (one per atom)
+        Returns:
+             numpy.ndarray: valency constraints (one per atom)
         '''
         valence = []
         for atom in self.numbers:
@@ -480,13 +496,16 @@ class Molecule:
     def _get_CN_neighbors(self, idx):
         '''
         For a focus atom of type K returns indices of atoms C (carbon) and N (nitrogen)
-        on two-step paths of the form K-C-N (and K-C-C for K=N).
+        on two-step paths of the form K-C-N (and K-C-C only for K=N since one atom
+        needs to be nitrogen).
 
-        :param idx (int): the index of the focus atom from which paths are examined
+        Args:
+            idx (int): the index of the focus atom from which paths are examined
 
-        :return: nested lists [list1, list2], where list1[i] contains an index of a
-        direct neighbor of the focus atom and list2[i] contains the index of the
-        neighbor of that neighbor on the i-th identified two-step path
+        Returns:
+             list of lists: list1[i] contains an index of a direct neighbor of the
+                focus atom and list2[i] contains the index of a second neighbor on the
+                i-th identified two-step path
         '''
         con_mat = self.get_connectivity()
         nbors = con_mat[idx] > 0
@@ -497,7 +516,7 @@ class Molecule:
         _numbers[idx] = 0
         CN_nbors = np.where(np.logical_and(_numbers == 7, con_mat[C_nbors] > 0))
         CN_nbors = [(C_nbors[CN_nbors[0][i]], CN_nbors[1][i])
-                        for i in range(len(CN_nbors[0]))]
+                    for i in range(len(CN_nbors[0]))]
         if type == 7:  # for N atoms, also add C-C neighbors
             CC_nbors = np.where(np.logical_and(
                 _numbers == 6, con_mat[C_nbors] > 0))
@@ -511,14 +530,17 @@ class Molecule:
         '''
         Retrieve the indices of neighbors of an atom.
 
-        :param idx (int): index of the atom
-        :param types (list of int, optional): restrict the returned neighbors to
-            contain only atoms of the specified types (set None to apply no type
-            filter, default: None)
-        :param strength (int, optional): restrict the returned neighbors to contain
-            only atoms with a certain minimal bond order to the atom at idx (default: 1)
+        Args:
+            idx (int): index of the atom
+            types (list of int, optional): restrict the returned neighbors to
+                contain only atoms of the specified types (set None to apply no type
+                filter, default: None)
+            strength (int, optional): restrict the returned neighbors to contain
+                only atoms with a certain minimal bond order to the atom at idx
+                (default: 1)
 
-        :return: list containing the indices of all neighbors that meet the requirements
+        Returns:
+             list of int: indices of all neighbors that meet the requirements
         '''
         con_mat = self.get_connectivity()
         neighbors = con_mat[idx] >= strength
@@ -536,7 +558,8 @@ class Molecule:
         such atoms etc.). The ring count is provided for rings from size 3 to 8 (R3,
         R4, ..., R8) and for rings greater than size eight (R>8).
 
-        :return: dictionary containing bond and ring counts
+        Returns:
+             dictionary (str->int): bond and ring counts
         '''
         if self._bond_stats is None:
 
@@ -582,9 +605,11 @@ class Molecule:
         Retrieve the indices of all atoms in the molecule corresponding to a selected
         type.
 
-        :param type (int): the atom type (atomic number, e.g. 6 for carbon)
+        Args:
+            type (int): the atom type (atomic number, e.g. 6 for carbon)
 
-        :return: list with indices of all atoms with the selected type
+        Returns:
+             list of int: indices of all atoms with the selected type
         '''
         if type not in self._row_indices:
             self._row_indices[type] = np.where(self.numbers == type)[0]
@@ -603,11 +628,15 @@ class ConnectivityCompressor():
     def compress(self, connectivity_matrix):
         '''
         Compresses a single connectivity matrix.
-        :param connectivity_matrix (numpy.array): array (n_atoms x n_atoms)
-            containing the bond orders of bonds between atoms of a molecule
-        :return: dictionary containing the length of the non-redundant connectivity
-        matrix (list with upper triangular part) and the indices of that list where
-        bond orders > 0
+
+        Args:
+            connectivity_matrix (numpy.ndarray): array (n_atoms x n_atoms)
+                containing the bond orders of bonds between atoms of a molecule
+
+        Returns:
+            dictionary (str/int->int): the length of the non-redundant connectivity
+            matrix (list with upper triangular part) and the indices of that list for
+            bond orders > 0
         '''
         smaller = squareform(connectivity_matrix)  # get list of upper triangular part
         d = {'n_entries': len(smaller)}  # store length of list
@@ -620,9 +649,14 @@ class ConnectivityCompressor():
         '''
         Retrieve the full (n_atoms x n_atoms) connectivity matrix from compressed
         format.
-        :param idcs_dict (dictionary): compressed connectivity matrix (obtained with
-        the compress method)
-        :return: full connectivity matrix as a numpy.array of shape (n_atoms x n_atoms)
+
+        Args:
+            idcs_dict (dictionary str/int->int): compressed connectivity matrix
+                (obtained with the compress method)
+
+        Returns:
+            numpy.ndarray: full connectivity matrix as an array of shape (n_atoms x
+                n_atoms)
         '''
         n_entries = idcs_dict['n_entries']
         con_mat = np.zeros(n_entries)
@@ -634,8 +668,12 @@ class ConnectivityCompressor():
     def compress_batch(self, connectivity_batch):
         '''
         Compress a batch of connectivity matrices.
-        :param connectivity_batch (list of numpy.array): list of connectivity matrices
-        :return: list of compressed connectivity matrices (see compress)
+
+        Args:
+            connectivity_batch (list of numpy.ndarray): list of connectivity matrices
+
+        Returns:
+            list of dictionary: batch of compressed connectivity matrices (see compress)
         '''
         dict_list = []
         for matrix in connectivity_batch:
@@ -647,10 +685,12 @@ class ConnectivityCompressor():
         Retrieve a list of full connectivity matrices from a batch of compressed
         connectivity matrices.
 
-        :param idcs_dict_batch (list of dictionary): list with compressed connectivity
-            matrices
+        Args:
+            idcs_dict_batch (list of dictionary): list with compressed connectivity
+                matrices
 
-        :return: list of full connectivity matrices (see decompress)
+        Return:
+            list numpy.ndarray: batch of full connectivity matrices (see decompress)
         '''
         matrix_list = []
         for idcs_dict in idcs_dict_batch:
@@ -668,10 +708,10 @@ class IndexProvider():
     delimiter, '>' is the operator, and '8' is the target value).
 
     Args:
-        statistics (numpy.array):
+        statistics (numpy.ndarray):
             statistics of all molecules where columns correspond to molecules and rows
             correspond to available statistics (n_statistics x n_molecules)
-        row_headlines (numpy.array):
+        row_headlines (numpy.ndarray):
             the names of the statistics stored in each row (e.g. 'F' for the number of
             fluorine atoms or 'R5' for the number of rings of size 5)
         default_filter (str, optional):
@@ -728,11 +768,13 @@ class IndexProvider():
         Multiple filters can be concatenated using '&' (e.g. 'H,>8&C,=5' gives all
         molecules that have more than 8 hydrogen atoms and exactly 5 carbon atoms).
 
-        :param selection_str: string describing the criterion(s) for filtering (build
-            as described above)
+        Args:
+            selection_str (str): string describing the criterion(s) for filtering (build
+                as described above)
 
-        :return: list of indices of all the molecules in the dataset that fulfill the
-            selection criterion(s)
+        Returns:
+            list of int: indices of all the molecules in the dataset that fulfill the
+                selection criterion(s)
         '''
 
         delimiter = self.delimiter
