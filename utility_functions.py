@@ -843,7 +843,7 @@ def generate_molecules(amount,
     # initialize tensor for atom positions
     positions = torch.zeros(amount, max_length, n_dims).to(device)
     # initialize mask for molecules which are not yet finished (all in the beginning)
-    unfinished = torch.ones(amount).byte().to(device)
+    unfinished = torch.ones(amount, dtype=torch.bool).to(device)
     # initialize mask to mark single atoms as finished/unfinished
     atoms_unfinished = torch.ones(amount, max_length).float().to(device)
     # molecule generation stops if all regular atoms of a molecule are marked finished
@@ -927,7 +927,7 @@ def generate_molecules(amount,
             # get molecules that predicted no proper type but the stop token
             pred_stop = torch.eq(atom_numbers[unfinished, i], stop_token)
             # set current atom of these molecules to finished
-            stop_mask = torch.zeros(len(unfinished)).byte().to(device)
+            stop_mask = torch.zeros(len(unfinished), dtype=torch.bool).to(device)
             stop_mask[unfinished] = pred_stop
             atoms_unfinished[stop_mask, current_atoms[stop_mask]] = 0
             # get molecules that were finished in this iteration (those which were
