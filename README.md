@@ -3,11 +3,10 @@ Implementation of G-SchNet, a generative model for 3d molecular structures.
 
 # Requirements
 - schnetpack 0.3
-- pytorch >= 1.1
+- pytorch >= 1.2
 - python >= 2.7
 - Open Babel >= 2.41
 - rdkit >= 2019.03.4.0
-- ASE >= 3.15.0
 
 # Usage
 Clone the repository into your folder of choice:
