@@ -165,12 +165,12 @@ def get_parser():
                             default=35)
     gen_parser.add_argument('--file_name', type=str,
                             help='The name of the file in which generated '
-                                 'molecules are stored (default: %(default)s)',
-                            default='generated.p')
-    gen_parser.add_argument('--timestamp',
-                            help='Append the current time at finishing '
-                                 'generation of molecules to the file_name',
-                            action='store_true')
+                                 'molecules are stored (please note that '
+                                 'increasing numbers are appended to the file name '
+                                 'if it already exists and that the extension '
+                                 '.mol_dict is automatically added to the chosen '
+                                 'file name, default: %(default)s)',
+                            default='generated')
     gen_parser.add_argument('--store_unfinished',
                             help='Store molecules which have not been '
                                  'finished after sampling max_length atoms',
@@ -556,14 +556,16 @@ def main(args):
     jsonpath = os.path.join(args.modelpath, 'args.json')
 
     if args.mode == 'train':
+        # overwrite existing model if desired
         if args.overwrite and os.path.exists(args.modelpath):
             rmtree(args.modelpath)
             logging.info('existing model will be overwritten...')
 
+        # create model directory if it does not exist
         if not os.path.exists(args.modelpath):
             os.makedirs(args.modelpath)
 
-        # get latest checkpoint of pre-trained model if desired
+        # get latest checkpoint of pre-trained model if a path was provided
         if args.pretrained_path is not None:
             model_chkpt_path = os.path.join(args.modelpath, 'checkpoints')
             pretrained_chkpt_path = os.path.join(args.pretrained_path, 'checkpoints')
@@ -600,11 +602,14 @@ def main(args):
                         copyfile(chkpt, os.path.join(model_chkpt_path,
                                                      f'checkpoint-{epoch}.pth.tar'))
 
+        # store arguments for training in model directory
         to_json(jsonpath, argparse_dict)
-
-        spk.utils.set_random_seed(args.seed)
         train_args = args
+
+        # set seed
+        spk.utils.set_random_seed(args.seed)
     else:
+        # load arguments used for training from model directory
         train_args = read_from_json(jsonpath)
 
     # load data for training/evaluation
@@ -688,22 +693,18 @@ def main(args):
         if not os.path.exists(gen_path):
             os.makedirs(gen_path)
         # get untaken filename and store results
-        file_name = gen_path + args.file_name
-        if args.timestamp:
-            file_name = file_name.split('.p')[0] +\
-                        time.strftime("(%Y-%m-%d_%H-%M-%S)") + '.p'
-        if os.path.isfile(file_name):
+        file_name = os.path.join(gen_path, args.file_name)
+        if os.path.isfile(file_name + '.mol_dict'):
             expand = 0
             while True:
                 expand += 1
-                new_file_name = file_name.split('.p')[0] + '_' +\
-                                str(expand) + '.p'
-                if os.path.isfile(new_file_name):
+                new_file_name = file_name + '_' + str(expand)
+                if os.path.isfile(new_file_name + '.mol_dict'):
                     continue
                 else:
                     file_name = new_file_name
                     break
-        with open(file_name, 'wb') as f:
+        with open(file_name + '.mol_dict', 'wb') as f:
             pickle.dump(generated, f)
         logging.info('...done!')
     else:
