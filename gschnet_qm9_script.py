@@ -2,7 +2,6 @@
 import argparse
 import logging
 import os
-import sys
 import pickle
 import time
 from shutil import copyfile, rmtree
@@ -82,11 +81,11 @@ def get_parser():
     train_parser.add_argument('--overwrite',
                               help='Remove previous model directory.',
                               action='store_true')
-    train_parser.add_argument('--pretrained',
-                              help='Starting from a pretrained model (reset '
-                                   'optimizer parameters such as best loss '
-                                   'and learning rate and create new split)',
-                              action='store_true')
+    train_parser.add_argument('--pretrained_path',
+                              help='Start training from the pre-trained model at the '
+                                   'provided path (reset optimizer parameters such as '
+                                   'best loss and learning rate and create new split)',
+                              default=None)
     train_parser.add_argument('--split_path',
                               help='Path/destination of npz with data splits',
                               default=None)
@@ -386,7 +385,7 @@ def train(args, model, train_loader, val_loader, device):
 
     # reset optimizer and hooks if starting from pre-trained model (e.g. for
     # fine-tuning)
-    if args.pretrained:
+    if args.pretrained_path is not None:
         logging.info('starting from pre-trained model...')
         # reset epoch and step
         trainer.epoch = 0
@@ -405,9 +404,8 @@ def train(args, model, train_loader, val_loader, device):
                                             window_length=1,
                                             stop_after_min=True)
         trainer.hooks[1] = schedule
-        # move checkpoints of pre-trained model to other folder
-        os.rename(os.path.join(args.modelpath, 'checkpoints'),
-                  os.path.join(args.modelpath, 'pretrain_checkpoints'))
+        # remove checkpoints of pre-trained model
+        rmtree(os.path.join(args.modelpath, 'checkpoints'))
         os.makedirs(os.path.join(args.modelpath, 'checkpoints'))
         # store first checkpoint
         trainer.store_checkpoint()
@@ -565,6 +563,43 @@ def main(args):
         if not os.path.exists(args.modelpath):
             os.makedirs(args.modelpath)
 
+        # get latest checkpoint of pre-trained model if desired
+        if args.pretrained_path is not None:
+            model_chkpt_path = os.path.join(args.modelpath, 'checkpoints')
+            pretrained_chkpt_path = os.path.join(args.pretrained_path, 'checkpoints')
+            if os.path.exists(model_chkpt_path) \
+                    and len(os.listdir(model_chkpt_path)) > 0:
+                logging.info(f'found existing checkpoints in model directory '
+                             f'({model_chkpt_path}), please use --overwrite or choose '
+                             f'empty model directory to start from a pre-trained '
+                             f'model...')
+                logging.warning(f'will ignore pre-trained model and start from latest '
+                                f'checkpoint at {model_chkpt_path}...')
+                args.pretrained_path = None
+            else:
+                logging.info(f'fetching latest checkpoint from pre-trained model at '
+                             f'{pretrained_chkpt_path}...')
+                if not os.path.exists(pretrained_chkpt_path):
+                    logging.warning(f'did not find checkpoints of pre-trained model, '
+                                    f'will train from scratch...')
+                    args.pretrained_path = None
+                else:
+                    chkpt_files = [f for f in os.listdir(pretrained_chkpt_path)
+                                   if f.startswith("checkpoint")]
+                    if len(chkpt_files) == 0:
+                        logging.warning(f'did not find checkpoints of pre-trained '
+                                        f'model, will train from scratch...')
+                        args.pretrained_path = None
+                    else:
+                        epoch = max([int(f.split(".")[0].split("-")[-1])
+                                     for f in chkpt_files])
+                        chkpt = os.path.join(pretrained_chkpt_path,
+                                             "checkpoint-" + str(epoch) + ".pth.tar")
+                        if not os.path.exists(model_chkpt_path):
+                            os.makedirs(model_chkpt_path)
+                        copyfile(chkpt, os.path.join(model_chkpt_path,
+                                                     f'checkpoint-{epoch}.pth.tar'))
+
         to_json(jsonpath, argparse_dict)
 
         spk.utils.set_random_seed(args.seed)
@@ -588,8 +623,6 @@ def main(args):
         # splits the dataset in test, val, train sets
         split_path = os.path.join(args.modelpath, 'split.npz')
         if args.mode == 'train':
-            if args.pretrained and os.path.exists(split_path):
-                os.remove(split_path)  # remove old split from pre-training
             if args.split_path is not None:
                 copyfile(args.split_path, split_path)
 
