@@ -20,7 +20,7 @@ A model with the same settings as described in the paper can be trained by runni
 The training data (QM9) is automatically downloaded and preprocessed if not present in ./data/ and the model will be stored in ./models/gschnet/.
 We recommend to train on a GPU (add --cuda to the call). If your GPU has less than 16GB VRAM, you need to decrease the number of features (e.g. --features 64) or the depth of the network (e.g. --interactions 6).
 
-Running the script with the following arguments will generate 100 molecules using the trained model at ./model/geschnet/ and store them in ./model/gschnet/generated/generated.p:
+Running the script with the following arguments will generate 100 molecules using the trained model at ./model/geschnet/ and store them in ./model/gschnet/generated/generated.mol_dict:
 
     python ./G-SchNet/gschnet_qm9_script.py generate gschnet ./models/gschnet/ 100
 
