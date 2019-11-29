@@ -128,15 +128,13 @@ def preprocess_molecules(mol_idcs, source_db, valence,
             (default: False)
 
     Returns
-        mols (list of ase.Atoms): list of all valid molecules
-        data_list (list of dict): list of corresponding dictionaries with data
-        stats (numpy.array): (n_statistics x n_valid_molecules) matrix with atom, bond,
+        list of ase.Atoms: list of all valid molecules
+        list of dict: list of corresponding dictionaries with data of each molecule
+        numpy.ndarray: (n_statistics x n_valid_molecules) matrix with atom, bond,
             and ring count statistics
-        inval (list of int): list with indices of molecules that failed the valency
-            check
-        disc (list of int): list with indices of molecules that consist of disconnected
-            parts
-        count (int): number of molecules processed
+        list of int: list with indices of molecules that failed the valency check
+        list of int: list with indices of molecules that consist of disconnected parts
+        int: number of molecules processed
     '''
     # initial setup
     count = 0  # count the number of invalid molecules
@@ -280,9 +278,9 @@ def _submit_jobs(qs_out, count, chunk_size, n_all, working_flag,
         n_per_thread (int): number of molecules to be given to each thread
 
     Returns:
-        working_flag (numpy.ndarray): array with flags indicating whether workers got
+        numpy.ndarray: array with flags indicating whether workers got
             a job
-        new_count (int): index of the new earliest, not yet preprocessed molecule in
+        int: index of the new earliest, not yet preprocessed molecule in
             the db (after the submitted preprocessing jobs have been done)
     '''
     # calculate indices of molecules that shall be preprocessed by workers

@@ -17,10 +17,10 @@ class Molecule:
     dataset). Mainly relies on routines from Open Babel and RdKit.
 
     Args:
-        pos (numpy.array): positions of atoms in euclidean space (n_atoms x 3)
-        atomic_numbers (numpy.array): list with nuclear charge/type of each atom
+        pos (numpy.ndarray): positions of atoms in euclidean space (n_atoms x 3)
+        atomic_numbers (numpy.ndarray): list with nuclear charge/type of each atom
             (e.g. 1 for hydrogens, 6 for carbons etc.).
-        connectivity_matrix (numpy.array, optional): optionally, a pre-calculated
+        connectivity_matrix (numpy.ndarray, optional): optionally, a pre-calculated
             connectivity matrix (n_atoms x n_atoms) containing the bond order between
             atom pairs can be provided (default: None).
         store_positions (bool, optional): set True to store the positions of atoms in
@@ -559,7 +559,7 @@ class Molecule:
         R4, ..., R8) and for rings greater than size eight (R>8).
 
         Returns:
-             dictionary (str->int): bond and ring counts
+             dict (str->int): bond and ring counts
         '''
         if self._bond_stats is None:
 
@@ -634,7 +634,7 @@ class ConnectivityCompressor():
                 containing the bond orders of bonds between atoms of a molecule
 
         Returns:
-            dictionary (str/int->int): the length of the non-redundant connectivity
+            dict (str/int->int): the length of the non-redundant connectivity
             matrix (list with upper triangular part) and the indices of that list for
             bond orders > 0
         '''
@@ -651,7 +651,7 @@ class ConnectivityCompressor():
         format.
 
         Args:
-            idcs_dict (dictionary str/int->int): compressed connectivity matrix
+            idcs_dict (dict str/int->int): compressed connectivity matrix
                 (obtained with the compress method)
 
         Returns:
@@ -673,7 +673,7 @@ class ConnectivityCompressor():
             connectivity_batch (list of numpy.ndarray): list of connectivity matrices
 
         Returns:
-            list of dictionary: batch of compressed connectivity matrices (see compress)
+            list of dict: batch of compressed connectivity matrices (see compress)
         '''
         dict_list = []
         for matrix in connectivity_batch:
@@ -686,7 +686,7 @@ class ConnectivityCompressor():
         connectivity matrices.
 
         Args:
-            idcs_dict_batch (list of dictionary): list with compressed connectivity
+            idcs_dict_batch (list of dict): list with compressed connectivity
                 matrices
 
         Return:
@@ -819,7 +819,7 @@ class ProcessQ(Process):
         target (callable object): the function that is executed in the process's run
             method
         args (list of any): sequential arguments target is called with
-        kwargs (dictionary of any): keyword arguments target is called with
+        kwargs (dict (str->any)): keyword arguments target is called with
     '''
 
     def __init__(self, queue, name=None, target=None, args=(), kwargs={}):

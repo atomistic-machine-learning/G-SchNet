@@ -275,7 +275,7 @@ class QM9gen(DownloadableAtomsData):
                          'validity during pre-processing.')
             invalid_list = None
         # check validity of molecules and store connectivity matrices and interatomic
-        # distances in database as a preprocessing step
+        # distances in database as a pre-processing step
         qm9_db = os.path.join(self.path, f'qm9.db')
         preprocess_dataset(datapath=qm9_db, valence_list=[1, 1, 6, 4, 7, 3, 8, 2, 9, 1],
                            n_threads=8, n_mols_per_thread=125, logging_print=True,

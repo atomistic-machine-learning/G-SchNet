@@ -1,4 +1,6 @@
 import torch
+import os
+import json
 import numpy as np
 import torch.nn.functional as F
 
@@ -46,14 +48,14 @@ def cdists(mols, grid):
 
 def update_dict(d, d_upd):
     '''
-    Updates a dictionary of numpy.array with values from another dictionary of the
+    Updates a dictionary of numpy.ndarray with values from another dictionary of the
     same kind. If a key is present in both dictionaries, the array of the second
     dictionary is appended to the array of the first one and saved under that key in
     the first dictionary.
 
     Args:
-        d (dict of numpy.array): dictionary to be updated
-        d_upd (dict of numpy.array): dictionary with new values for updating
+        d (dict of numpy.ndarray): dictionary to be updated
+        d_upd (dict of numpy.ndarray): dictionary with new values for updating
     '''
     for key in d_upd:
         if key not in d:
@@ -68,10 +70,10 @@ def get_dict_count(d, max_length, skip=0):
     Counts the number of molecules in a dictionary where for each integer key i
     molecules with i atoms are stored as positions and atomic numbers. Dictionaries
     must be of the form
-    {i: {'_positions': numpy.array, '_atomic_numbers': numpy.array}}.
+    {i: {'_positions': numpy.ndarray, '_atomic_numbers': numpy.ndarray}}.
 
     Args:
-        d (dict of numpy.array): dictionary with atom positions and atomic numbers of
+        d (dict of numpy.ndarray): dictionary with atom positions and atomic numbers of
             molecules (sorted by number of atoms per molecule)
         max_length (int): the maximum number of atoms per molecule in the
             dictionary (corresponds to the largest key in the dictionary)
@@ -116,7 +118,8 @@ def run_threaded(target, splitable_kwargs, kwargs, results, n_threads=16,
 
     Returns:
         dict of list: the results dictionary containing lists with the returned values
-            of the target function (in the same order as the inputs in splitable_kwargs)
+            of the target function (the order of the elements in the splitable_kwargs
+            inputs is preserved in the output lists)
     '''
     # check if the number of threads is higher than the number of data points
     if len(splitable_kwargs) > 0:
@@ -198,12 +201,12 @@ def print_accumulated_staticstics(stats, stat_heads, name='generated',
     of carbon atoms per molecule of the set).
 
     Args:
-        stats (numpy.array): statistics of all molecules where columns
+        stats (numpy.ndarray): statistics of all molecules where columns
             correspond to molecules and rows correspond to available statistics
             (n_statistics x n_molecules)
-        stat_heads (numpy.array): the names of the statistics stored in each row in
-            stats (e.g. 'F' for the number of fluorine atoms or 'R5' for the number of
-            rings of size 5)
+        stat_heads (numpy.ndarray or list of str): the names of the statistics stored
+            in each row in stats (e.g. 'F' for the number of fluorine atoms or 'R5'
+            for the number of rings of size 5)
         name (str, optional): name of the set of molecules (e.g. 'generated' or
             'qm9', default: 'generated')
         fields (list of str, optional): the names of statistics for which the average
@@ -265,6 +268,106 @@ def print_accumulated_staticstics(stats, stat_heads, name='generated',
                 stat_heads[idx],
                 f'{len(selected)}  ({len(selected)/len(set):.2f}%)',
                 22)
+
+
+def print_atom_bond_ring_stats(generated_data_path, model_path, train_data_path):
+    '''
+    Print average atom, bond, and ring count statistics of generated molecules
+    in the provided database and reference training molecules.
+
+    Args:
+        generated_data_path (str): path to database with generated molecules
+        model_path (str): path to directory containing the model used to generate the
+            molecules (it should contain a split.npz file which is used to identify
+            training, validation, and test molecules and an args.json file containing
+            the arguments of the training procedure)
+        train_data_path (str): path to database with training data molecules
+    '''
+    # load data of generated molecules
+    stats_path = os.path.splitext(generated_data_path)[0] + f'_statistics.npz'
+    if not os.path.isfile(stats_path):
+        print(f'Statistics of generated molecules not found (expected it at '
+              f'{stats_path}).\nPlease specify the correct path to the database '
+              f'holding the generated molecules!')
+        return
+    stats_dict = np.load(stats_path)
+    stats = stats_dict['stats']
+    stat_heads = stats_dict['stat_heads']
+
+    # load data of training molecules
+    training_stats_path = os.path.splitext(train_data_path)[0] + f'_statistics.npz'
+    if not os.path.isfile(training_stats_path):
+        print(f'Statistics of training data not found (expected it at '
+              f'{training_stats_path}).\nWill only print statistics of generated '
+              f'molecules...')
+        have_train_stats = False
+    else:
+        have_train_stats = True
+        train_stat_dict = np.load(training_stats_path)
+
+    # load split file to identify training, validation, and test molecules
+    split_file = os.path.join(model_path, f'split.npz')
+    S = np.load(split_file)
+    train_idx = S['train_idx']
+    # check if subset was used (and restrict indices accordingly)
+    train_args_path = os.path.join(model_path, f'args.json')
+    with open(train_args_path) as handle:
+        train_args = json.loads(handle.read())
+    if 'subset_path' in train_args:
+        if train_args['subset_path'] is not None:
+            subset = np.load(train_args['subset_path'])
+            train_idx = subset[train_idx]
+
+    # Atom type statistics
+    descr = ' concerning atom types'
+    print_accumulated_staticstics(stats, stat_heads,
+                                  name='generated molecules' + descr)
+    if have_train_stats:
+        print_accumulated_staticstics(train_stat_dict['stats'],
+                                      train_stat_dict['stat_heads'],
+                                      name='training molecules' + descr,
+                                      set=train_idx)
+
+    # Atom bond statistics
+    descr = ' concerning atom bonds'
+    print_accumulated_staticstics(stats, stat_heads, fields=(),
+                                  name='generated molecules' + descr,
+                                  additive_fields={
+                                      'Single': ['H1C', 'H1N', 'H1O',
+                                                 'C1C', 'C1N', 'C1O', 'C1F',
+                                                 'N1N', 'N1O', 'N1F',
+                                                 'O1O', 'O1F'],
+                                      'Double': ['C2C', 'C2N', 'C2O',
+                                                 'N2N', 'N2O'],
+                                      'Triple': ['C3C', 'C3N']})
+    if have_train_stats:
+        print_accumulated_staticstics(train_stat_dict['stats'],
+                                      train_stat_dict['stat_heads'],
+                                      fields=(),
+                                      name='training molecules' + descr,
+                                      set=train_idx,
+                                      additive_fields={
+                                          'Single': ['H1C', 'H1N', 'H1O',
+                                                     'C1C', 'C1N', 'C1O', 'C1F',
+                                                     'N1N', 'N1O', 'N1F',
+                                                     'O1O', 'O1F'],
+                                          'Double': ['C2C', 'C2N', 'C2O',
+                                                     'N2N', 'N2O'],
+                                          'Triple': ['C3C', 'C3N']})
+
+    # Ring statistics
+    descr = ' concerning ring structures'
+    fields = ['R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R>8']
+    print_accumulated_staticstics(stats, stat_heads, fields=fields,
+                                  name='generated molecules' + descr,
+                                  print_stats=['molecules_with'])
+    if have_train_stats:
+        print_accumulated_staticstics(train_stat_dict['stats'],
+                                      train_stat_dict['stat_heads'],
+                                      fields=fields,
+                                      name='training molecules' + descr,
+                                      set=train_idx,
+                                      print_stats=['molecules_with'])
 
 
 def get_random_walk(mol_dict, seed=None):
@@ -718,10 +821,10 @@ def get_grid(radial_limits, n_bins, max_dist):
             generation step)
 
     Returns:
-        grid (numpy.array): 2d array of grid positions (n_grid_positions x 3) for all
+        grid (numpy.ndarray): 2d array of grid positions (n_grid_positions x 3) for all
             generation steps except the first
-        start_grid (numpy.array): 2d array of grid positions (n_grid_positions x 3) for
-            the first generation step
+        start_grid (numpy.ndarray): 2d array of grid positions (n_grid_positions x 3)
+            for the first generation step
 
     '''
     n_dims = 3  # make grid in 3d space
@@ -813,7 +916,7 @@ def generate_molecules(amount,
             gpu('cuda', default: 'cuda')
 
     Returns:
-        dict[int->str->numpy.array]: positions and atomic numbers of generated
+        dict[int->str->numpy.ndarray]: positions and atomic numbers of generated
             molecules where the first key is the number of atoms (i.e. all generated
             molecules with 9 atoms can be found using the key 9) and the second key
             is either '_positions' to get a (n_molecules x n_atoms x 3) array of atom
