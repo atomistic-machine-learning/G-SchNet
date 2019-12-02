@@ -1,5 +1,6 @@
 # G-SchNet
-Implementation of G-SchNet - a generative model for 3d molecular structures - accompanying the [paper published at NeurIPS 2019](http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules). 
+![generated molecules](./images/example_molecules_1.png)
+Implementation of G-SchNet - a generative model for 3d molecular structures - accompanying the paper [_"Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules"_ published at NeurIPS 2019](http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules). 
 
 G-SchNet generates molecules in an autoregressive fashion, placing one atom after another in 3d euclidean space. The model can be trained on data sets with molecules of variable size and composition. It only uses the positions and types of atoms in a molecule, needing no bond-based information such as molecular graphs.
 
@@ -66,3 +67,5 @@ imer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, _Advances in Neural Info
 # Notes
 We recently had to adapt some code due to changes in schnetpack. It is currently tested but should be running fine.
 The repository will be updated shortly, we will add a pre-trained model and a proper tutorial on how to use the code base.
+
+![more generated molecules](./images/example_molecules_2.png)
