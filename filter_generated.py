@@ -20,7 +20,7 @@ def get_parser():
     """ Setup parser for command line arguments """
     main_parser = argparse.ArgumentParser()
     main_parser.add_argument('data_path',
-                             help='path to generated molecules in .mol_dict format, '
+                             help='Path to generated molecules in .mol_dict format, '
                                   'a database called "generated_molecules.db" with the '
                                   'filtered molecules along with computed statistics '
                                   '("generated_molecules_statistics.npz") will be '
@@ -58,7 +58,7 @@ def get_parser():
                              choices=['all', 'valid', 'new',
                                       'valid_connectivity',
                                       'new_connectivity'],
-                             help='how much information shall be stored '
+                             help='How much information shall be stored '
                                   'after filtering: \n"all" keeps all '
                                   'generated molecules and statistics '
                                   'including the connectivity matrices,'

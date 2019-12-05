@@ -743,9 +743,9 @@ class IndexProvider():
         self.default_number = float(self.num_re.search(default_filter).group(0))
         self.delimiter = delimiter
 
-    def get_selected(self, selection_str):
+    def get_selected(self, selection_str, idcs=None):
         '''
-        Retrieve the indices of all molecules which fulfill the selection criterions.
+        Retrieve the indices of all molecules which fulfill the selection criteria.
         The selection string is of the general format
         'Statistics_nameDelimiterOperatorTarget_value' (e.g. 'C,>8' to filter for all
         molecules with more than eight carbon atoms where 'C' is the statistic counting
@@ -771,6 +771,8 @@ class IndexProvider():
         Args:
             selection_str (str): string describing the criterion(s) for filtering (build
                 as described above)
+            idcs (numpy.ndarray, optional): if provided, only this subset of all
+                molecules is filtered for structures fulfilling the selection criteria
 
         Returns:
             list of int: indices of all the molecules in the dataset that fulfill the
@@ -778,8 +780,9 @@ class IndexProvider():
         '''
 
         delimiter = self.delimiter
-        idcs = np.arange(len(self.statistics[0]))  # take all to begin with
-        criterions = selection_str.split('&')  # split criterions
+        if idcs is None:
+            idcs = np.arange(len(self.statistics[0]))  # take all to begin with
+        criterions = selection_str.split('&')  # split criteria
         for criterion in criterions:
             rel_strs = criterion.split(delimiter)
 
