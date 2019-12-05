@@ -72,7 +72,7 @@ The following properties are available for __both generated molecules as well as
 
 | property | description |
 |---|---|
-| n_atoms | total number of a atoms |
+| n_atoms | total number of atoms |
 | C, N, O, F, H | number of atoms of the respective type |
 | H1C, C2C, N1O, ... | number of covalent bonds of a certain kind (single, double, triple) between two specific atom types (the types are ordere by increasing nuclear charge, i.e. write C3N not N3C) |
 | R3, ..., R8, R>8 | number of rings of a certain size (3-8, >8) |
