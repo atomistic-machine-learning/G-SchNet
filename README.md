@@ -130,6 +130,6 @@ N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d poin
 
 # Notes
 We recently had to adapt some code due to changes in schnetpack. It is currently tested but should be running fine.
-The repository will be updated with a pre-trained model shortly. We will also explain how a pre-trained model can be fine-tuned in order to bias generation towards a target property (small HOMO-LUMO gap)
+The repository will be updated with a pre-trained model shortly. We will also explain how a pre-trained model can be fine-tuned in order to bias generation towards a target property (small HOMO-LUMO gap).
 
 ![more generated molecules](./images/example_molecules_2.png)
