@@ -47,7 +47,7 @@ The script checks the valency constraints (e.g. every hydrogen atom should have 
 
 *_Please note that, as described in the paper, we use molecular fingerprints and canonical smiles representations to identify duplicates which means that different spatial conformers corresponding to the same canonical smiles string are tagged as duplicates and removed in the process. Add '--filters valence disconnected' to the call in order to not remove but keep identified duplicates in the created database._
 
-### Displaying generated and training data molecules
+### Displaying generated and QM9 training data molecules
 After filtering, all generated molecules stored in the sqlite database can be displayed with ASE as follows:
 
     python ./G-SchNet/display_molecules.py --data_path ./models/gschnet/generated/generated_molecules.db
@@ -58,11 +58,11 @@ An example call to display all generated molecules that consist of at least 7 ca
    
     python ./G-SchNet/display_molecules.py --data_path ./models/gschnet/generated/generated_molecules.db --select "C,>=7&R5+R6,=2" "F,>=1"
     
-The same script can also be used to display molecules from the training database using --train_data_path:
+The same script can also be used to display molecules from the QM9 training database using --train_data_path:
     
     python ./G-SchNet/display_molecules.py --train_data_path ./data/qm9gen.db
     
-Note that displaying all ~130k molecules from the training database is quite slow. However, the training database can also be queried in a similar manner by prepending "training" to the selection string. For example, the following call will display all molecules from the training database that have at least one Fluorine atom and not more than 5 other heavy atoms:
+Note that displaying all ~130k molecules from the database is quite slow. However, the training database can also be queried in a similar manner by prepending "training" to the selection string. For example, the following call will display all molecules from the QM9 database that have at least one Fluorine atom and not more than 5 other heavy atoms:
 
     python ./G-SchNet/display_molecules.py --train_data_path ./data/qm9gen.db --select "training F,>=1&C+N+O,<=5"
     
@@ -89,23 +89,23 @@ Additionally, __generated molecules__ allow to use the following properties in s
 
 Finally, molecules from the __QM9 training database__ can also be queried for properties available in the QM9 dataset:
 
-| property | description |
-|---|---|
-| rotational_constant_A |  |
-| rotational_constant_B |  |
-| rotational_constant_C |  |
-| dipole_moment | the absolute dipole moment |
-| isotropic_polarizability | |
-| homo | highest occupied molecular orbital (HOMO) |
-| lumo | lowest unoccupied molecular orbital (LUMO) |
-| gap | energy difference between the HOMO and LUMO (HOMO-LUMO gap) |
-| electronic_spatial_extent |  |
-| zpve |  |
-| energy_U0 |  |
-| energy_U |  |
-| enthalpy_H |  |
-| free_energy |  |
-| heat_capacity |  |
+| property | unit | description |
+|---|---|---|
+| rotational_constant_A | GHz | rotational constant |
+| rotational_constant_B | GHz | rotational constant |
+| rotational_constant_C | GHz | rotational constant |
+| dipole_moment | eV | length of the dipole moment |
+| isotropic_polarizability | eV | isotropic polarizability |
+| homo | eV | energy of highest occupied molecular orbital (HOMO) |
+| lumo | eV | energy of lowest unoccupied molecular orbital (LUMO) |
+| gap | eV | energy difference between the HOMO and LUMO (HOMO-LUMO gap) |
+| electronic_spatial_extent | eV | electronic spatial extent |
+| zpve | eV | zero point vibrational energy |
+| energy_U0 | eV | internal energy at 0 K |
+| energy_U | eV | internal energy at 298.15 K |
+| enthalpy_H | eV | enthalpy at 298.15 K |
+| free_energy | eV | free energy at 298.15 K |
+| heat_capacity | cal/molK | heat capacity at 298.15 K |
 
 
 # Citation
