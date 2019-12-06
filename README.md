@@ -108,6 +108,8 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 | free_energy | eV | free energy at 298.15 K |
 | heat_capacity | cal/(molK) | heat capacity at 298.15 K |
 
+All properties use the ASE-internal units and therefore can easily be converted with ASE. For example, you can get the dipole moment in Debye by multiplying it with 1/ase.units.debye. Similarly, the isotropic polarizability can be converted to Bohr² using 1/ase.units.bohr² and the electronic spatial extent may be obtained in Bohr³ with 1/ase.units.bohr³.
+
 
 # Citation
 If you are using G-SchNet in your research, please cite the corresponding paper:
