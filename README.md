@@ -1,7 +1,7 @@
 # G-SchNet
 
 ![generated molecules](./images/example_molecules_1.png)
-Implementation of G-SchNet - a generative model for 3d molecular structures - accompanying the paper [_"Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules"_ published at NeurIPS 2019](http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules). 
+Implementation of G-SchNet - a generative model for 3d molecular structures - accompanying the paper [_"Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules"_](http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules) published at NeurIPS 2019. 
 
 G-SchNet generates molecules in an autoregressive fashion, placing one atom after another in 3d euclidean space. The model can be trained on data sets with molecules of variable size and composition. It only uses the positions and types of atoms in a molecule, needing no bond-based information such as molecular graphs.
 
@@ -95,28 +95,24 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 
 | property | unit | description |
 |---|---|---|
-| rotational_constant_A | GHz | rotational constant |
-| rotational_constant_B | GHz | rotational constant |
-| rotational_constant_C | GHz | rotational constant |
-| dipole_moment | eV | length of the dipole moment |
-| isotropic_polarizability | eV | isotropic polarizability |
+| dipole_moment | e*Ångström | length of the dipole moment |
+| isotropic_polarizability | Ångström² | isotropic polarizability |
 | homo | eV | energy of highest occupied molecular orbital (HOMO) |
 | lumo | eV | energy of lowest unoccupied molecular orbital (LUMO) |
 | gap | eV | energy difference between the HOMO and LUMO (HOMO-LUMO gap) |
-| electronic_spatial_extent | eV | electronic spatial extent |
+| electronic_spatial_extent | Ångström³ | electronic spatial extent |
 | zpve | eV | zero point vibrational energy |
 | energy_U0 | eV | internal energy at 0 K |
 | energy_U | eV | internal energy at 298.15 K |
 | enthalpy_H | eV | enthalpy at 298.15 K |
 | free_energy | eV | free energy at 298.15 K |
-| heat_capacity | cal/molK | heat capacity at 298.15 K |
+| heat_capacity | cal/(molK) | heat capacity at 298.15 K |
 
 
 # Citation
 If you are using G-SchNet in your research, please cite the corresponding paper:
 
-N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules. In H. Wallach, H. Larochelle, A. Beygelz-
-imer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, _Advances in Neural Information Processing Systems 32_, pages 7564–7576. Curran Associates, Inc., 2019.
+N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, _Advances in Neural Information Processing Systems 32_, pages 7564–7576. Curran Associates, Inc., 2019.
 
     @incollection{NIPS2019_8974,
     title = {Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules},
