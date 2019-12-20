@@ -11,7 +11,7 @@ The code provided in this repository allows to train G-SchNet on the QM9 data se
 - schnetpack 0.3
 - pytorch >= 1.2
 - python >= 3.7
-- Open Babel >= 2.41
+- Open Babel 2.41
 - rdkit >= 2019.03.4.0
 
 # Getting started
