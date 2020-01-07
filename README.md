@@ -11,8 +11,17 @@ The code provided in this repository allows to train G-SchNet on the QM9 data se
 - schnetpack 0.3
 - pytorch >= 1.2
 - python >= 3.7
+- ASE >= 3.17.0
 - Open Babel 2.41
 - rdkit >= 2019.03.4.0
+
+The following two commands will create a new conda environment called _"gschnet"_ and install all dependencies (tested on Ubuntu 18.04):
+
+    conda create -n gschnet python=3.7 pytorch=1.3.1 torchvision cudatoolkit=10.1 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
+    pip install 'schnetpack==0.3'
+    
+Replace _"cudatoolkit=10.1"_ with _"cpuonly"_ if you do not want to utilize a GPU for training/generation. However, we strongly recommend to use a GPU if possible.
+
 
 # Getting started
 Clone the repository into your folder of choice:
@@ -22,17 +31,17 @@ Clone the repository into your folder of choice:
 ### Training a model
 A model with the same settings as described in the paper can be trained by running gschnet_qm9_script.py with standard parameters:
 
-    python ./G-SchNet/gschnet_qm9_script.py train gschnet ./data/ ./models/gschnet/
+    python ./G-SchNet/gschnet_qm9_script.py train gschnet ./data/ ./models/gschnet/ --cuda
 
 The training data (QM9) is automatically downloaded and preprocessed if not present in ./data/ and the model will be stored in ./models/gschnet/.
-We recommend to train on a GPU (add _--cuda_ to the call). If your GPU has less than 16GB VRAM, you need to decrease the number of features (e.g. _--features 64_) or the depth of the network (e.g. _--interactions 6_).
+We recommend to train on a GPU but you can remove _--cuda_ from the call to use the CPU instead. If your GPU has less than 16GB VRAM, you need to decrease the number of features (e.g. _--features 64_) or the depth of the network (e.g. _--interactions 6_).
 
 ### Generating molecules
 Running the script with the following arguments will generate 1000 molecules using the trained model at ./model/geschnet/ and store them in ./model/gschnet/generated/generated.mol_dict:
 
-    python ./G-SchNet/gschnet_qm9_script.py generate gschnet ./models/gschnet/ 1000
+    python ./G-SchNet/gschnet_qm9_script.py generate gschnet ./models/gschnet/ 1000 --cuda
 
-Add _--cuda_ to the call to run on the gpu and add _--show_gen_ to display the molecules with ASE after generation. If you are running into problems due to small VRAM, decrease the size of mini-batches during generation (e.g. _--chunk_size 500_, default is 1000).
+Remove _--cuda_ from the call if you want to run on the CPU. Add _--show_gen_ to display the molecules with ASE after generation. If you are running into problems due to small VRAM, decrease the size of mini-batches during generation (e.g. _--chunk_size 500_, default is 1000).
 
 ### Filtering and analysis of generated molecules
 After generation, the generated molecules can be filtered for invalid and duplicate structures by running filter_generated.py:
