@@ -661,8 +661,8 @@ class ConnectivityCompressor():
         n_entries = idcs_dict['n_entries']
         con_mat = np.zeros(n_entries)
         for i in idcs_dict:
-            if isinstance(i, int):
-                con_mat[idcs_dict[i]] = i
+            if isinstance(i, int) or i.isdigit():
+                con_mat[idcs_dict[i]] = int(i)
         return squareform(con_mat)
 
     def compress_batch(self, connectivity_batch):
