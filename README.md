@@ -15,9 +15,10 @@ The code provided in this repository allows to train G-SchNet on the QM9 data se
 - Open Babel 2.41
 - rdkit >= 2019.03.4.0
 
-The following two commands will create a new conda environment called _"gschnet"_ and install all dependencies (tested on Ubuntu 18.04):
+The following commands will create a new conda environment called _"gschnet"_ and install all dependencies (tested on Ubuntu 18.04):
 
     conda create -n gschnet python=3.7 pytorch=1.3.1 torchvision cudatoolkit=10.1 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
+    conda activate gschnet
     pip install 'schnetpack==0.3'
     
 Replace _"cudatoolkit=10.1"_ with _"cpuonly"_ if you do not want to utilize a GPU for training/generation. However, we strongly recommend to use a GPU if available.
