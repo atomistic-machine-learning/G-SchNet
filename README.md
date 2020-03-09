@@ -131,7 +131,7 @@ N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d poin
     author = {Gebauer, Niklas and Gastegger, Michael and Sch\"{u}tt, Kristof},
     booktitle = {Advances in Neural Information Processing Systems 32},
     editor = {H. Wallach and H. Larochelle and A. Beygelzimer and F. d\textquotesingle Alch\'{e}-Buc and E. Fox and R. Garnett},
-    pages = {7564--7576},
+    pages = {7566--7578},
     year = {2019},
     publisher = {Curran Associates, Inc.},
     url = {http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules.pdf}
