@@ -291,9 +291,9 @@ if __name__ == '__main__':
                                   f'database, skipping query {query}.')
                             continue
                         else:
-                            op = index_provider.rel_re.search(condition).group(0)
-                            op = index_provider.op_dict[op]  # extract operator
-                            num = float(index_provider.num_re.search(
+                            op = train_index_provider.rel_re.search(condition).group(0)
+                            op = train_index_provider.op_dict[op]  # extract operator
+                            num = float(train_index_provider.num_re.search(
                                 condition).group(0))  # extract numerical value
                             remaining_idcs = []
                             for idx in idcs:
