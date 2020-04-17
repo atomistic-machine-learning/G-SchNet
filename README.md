@@ -32,9 +32,10 @@ Clone the repository into your folder of choice:
 ### Training a model
 A model with the same settings as described in the paper can be trained by running gschnet_qm9_script.py with standard parameters:
 
-    python ./G-SchNet/gschnet_qm9_script.py train gschnet ./data/ ./models/gschnet/ --cuda
+    python ./G-SchNet/gschnet_qm9_script.py train gschnet ./data/ ./models/gschnet/ --split 50000 5000 --cuda
 
-The training data (QM9) is automatically downloaded and preprocessed if not present in ./data/ and the model will be stored in ./models/gschnet/.
+The training data (QM9) is automatically downloaded and preprocessed if not present in ./data/ and the model will be stored in ./models/gschnet/. 
+With _--split 50000 5000_, 50k molecules are used as the training set, 5k are used for validation, and the remaining structures are left out as a test set.
 We recommend to train on a GPU but you can remove _--cuda_ from the call to use the CPU instead. If your GPU has less than 16GB VRAM, you need to decrease the number of features (e.g. _--features 64_) or the depth of the network (e.g. _--interactions 6_).
 
 ### Generating molecules
