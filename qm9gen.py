@@ -41,7 +41,7 @@ class QM9gen(DownloadableAtomsData):
                 computational cost during training as otherwise the distances will be
                 computed once in every epoch, default: True)
             remove_invalid (bool, optional): if True QM9 molecules that do not pass the
-                valency check will be removed from the training data (note 1: the
+                valence check will be removed from the training data (note 1: the
                 validity is per default inferred from a pre-computed list in our
                 repository but will be assessed locally if the download fails,
                 note2: only works if the pre-processed database does not yet exist,
@@ -50,6 +50,11 @@ class QM9gen(DownloadableAtomsData):
         References:
             .. [#qm9_1] https://ndownloader.figshare.com/files/3195404
     """
+
+    # general settings for the dataset
+    available_atom_types = [1, 6, 7, 8, 9]  # all atom types found in the dataset
+    atom_types_valence = [1, 4, 3, 2, 1]  # valence constraints of the atom types
+    radial_limits = [0.9, 1.7]  # minimum and maximum distance between neighboring atoms
 
     # properties
     A = 'rotational_constant_A'
@@ -230,6 +235,8 @@ class QM9gen(DownloadableAtomsData):
         # check validity of molecules and store connectivity matrices and inter-atomic
         # distances in database as a pre-processing step
         qm9_db = os.path.join(self.path, f'qm9.db')
+        valence_list = \
+            np.array([self.available_atom_types, self.atom_types_valence]).flatten('F')
         preprocess_dataset(datapath=qm9_db, valence_list=[1, 1, 6, 4, 7, 3, 8, 2, 9, 1],
                            n_threads=8, n_mols_per_thread=125, logging_print=True,
                            new_db_path=self.dbpath,
