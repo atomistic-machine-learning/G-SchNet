@@ -74,10 +74,6 @@ class QM9gen(DownloadableAtomsData):
         U0, U, H, G, Cv
     ]
 
-    reference = {
-        zpve: 0, U0: 1, U: 2, H: 3, G: 4, Cv: 5
-    }
-
     units = [1., 1., 1., Debye, Bohr ** 3,
              Hartree, Hartree, Hartree,
              Bohr ** 2, Hartree,
@@ -93,21 +89,12 @@ class QM9gen(DownloadableAtomsData):
                  remove_invalid=True):
         self.path = path
         self.dbpath = os.path.join(self.path, f'qm9gen.db')
-        self.atomref_path = os.path.join(self.path, 'atomref.npz')
         self.precompute_distances = precompute_distances
         self.remove_invalid = remove_invalid
 
         super().__init__(self.dbpath, subset=subset,
                          available_properties=self.properties,
                          units=self.units, download=download)
-
-    def get_reference(self, property):
-        if property not in QM9gen.reference:
-            atomref = None
-        else:
-            col = QM9gen.reference[property]
-            atomref = np.load(self.atomref_path)['atom_ref'][:, col:col + 1]
-        return atomref
 
     def create_subset(self, idx):
         """
@@ -159,46 +146,12 @@ class QM9gen(DownloadableAtomsData):
 
     def _download(self):
         works = True
-
-        if not os.path.exists(self.atomref_path):
-            works = works and self._load_atomrefs()
-
         if not os.path.exists(self.dbpath):
             qm9_path = os.path.join(self.path, f'qm9.db')
             if not os.path.exists(qm9_path):
                 works = works and self._load_data()
             works = works and self._preprocess_qm9()
         return works
-
-    def _load_atomrefs(self):
-        logging.info('Downloading GDB-9 atom references...')
-        at_url = 'https://ndownloader.figshare.com/files/3195395'
-        tmpdir = tempfile.mkdtemp('gdb9')
-        tmp_path = os.path.join(tmpdir, 'atomrefs.txt')
-
-        try:
-            request.urlretrieve(at_url, tmp_path)
-            logging.info("Done.")
-        except HTTPError as e:
-            logging.error("HTTP Error:", e.code, at_url)
-            return False
-        except URLError as e:
-            logging.error("URL Error:", e.reason, at_url)
-            return False
-
-        atref = np.zeros((100, 6))
-        labels = ['zpve', 'U0', 'U', 'H', 'G', 'Cv']
-        with open(tmp_path) as f:
-            lines = f.readlines()
-            for z, l in zip([1, 6, 7, 8, 9], lines[5:10]):
-                atref[z, 0] = float(l.split()[1])
-                atref[z, 1] = float(l.split()[2]) * Hartree / eV
-                atref[z, 2] = float(l.split()[3]) * Hartree / eV
-                atref[z, 3] = float(l.split()[4]) * Hartree / eV
-                atref[z, 4] = float(l.split()[5]) * Hartree / eV
-                atref[z, 5] = float(l.split()[6])
-        np.savez(self.atomref_path, atom_ref=atref, labels=labels)
-        return True
 
     def _load_data(self):
         logging.info('Downloading GDB-9 data...')
@@ -274,7 +227,7 @@ class QM9gen(DownloadableAtomsData):
             logging.info('CAUTION: Could not download pre-computed list, will assess '
                          'validity during pre-processing.')
             invalid_list = None
-        # check validity of molecules and store connectivity matrices and interatomic
+        # check validity of molecules and store connectivity matrices and inter-atomic
         # distances in database as a pre-processing step
         qm9_db = os.path.join(self.path, f'qm9.db')
         preprocess_dataset(datapath=qm9_db, valence_list=[1, 1, 6, 4, 7, 3, 8, 2, 9, 1],
