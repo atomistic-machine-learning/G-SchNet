@@ -24,6 +24,7 @@ from utility_functions import boolean_string, collate_atoms, generate_molecules,
     update_dict, get_dict_count
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
 dataset_name_to_class_mapping = {'qm9': QM9gen}
 
 
@@ -77,8 +78,8 @@ def get_parser():
                                    f'default: %(default)s)'),
     train_parser.add_argument('--subset_path', type=str,
                               help='A path to a npy file containing indices '
-                                   'of a subset of the data set at datapath, '
-                                   'default: %(default)s)',
+                                   'of a subset of the data set at datapath '
+                                   '(default: %(default)s)',
                               default=None)
     train_parser.add_argument('--seed', type=int, default=None,
                               help='Set random seed for torch and numpy.')

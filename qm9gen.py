@@ -237,7 +237,7 @@ class QM9gen(DownloadableAtomsData):
         qm9_db = os.path.join(self.path, f'qm9.db')
         valence_list = \
             np.array([self.available_atom_types, self.atom_types_valence]).flatten('F')
-        preprocess_dataset(datapath=qm9_db, valence_list=[1, 1, 6, 4, 7, 3, 8, 2, 9, 1],
+        preprocess_dataset(datapath=qm9_db, valence_list=valence_list,
                            n_threads=8, n_mols_per_thread=125, logging_print=True,
                            new_db_path=self.dbpath,
                            precompute_distances=self.precompute_distances,

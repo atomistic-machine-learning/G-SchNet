@@ -370,7 +370,7 @@ def print_atom_bond_ring_stats(generated_data_path, model_path, train_data_path)
                                       print_stats=['molecules_with'])
 
 
-def get_random_walk(mol_dict, seed=None):
+def get_random_walk(mol_dict, stop_token=10, seed=None):
     '''
     Builds a random generation trace of a training molecule. Assumes that the atoms are
     ordered by distance to the center of mass (close to far) and always starts with
@@ -394,6 +394,8 @@ def get_random_walk(mol_dict, seed=None):
             ('_positions') ordered by distance to the center of mass of the molecule,
             the atomic numbers ('_atomic_numbers'), the connectivity matrix
             ('_con_mat'), and, optionally, the precomputed distances ('dists')
+        stop_token (int, optional): a dummy atom type which is used as the stop token
+            (default: 10)
         seed (int, optional): a seed for the random selection of the focus at each
             step (default: None)
     '''
@@ -425,7 +427,7 @@ def get_random_walk(mol_dict, seed=None):
 
         # predict finished if no neighbors are left
         if torch.sum(con_mat[cur]) == 0:
-            pred_types += [10]  # predict stop token
+            pred_types += [stop_token]  # predict stop token
             avail[cur_i] = 0
             continue
 
@@ -648,7 +650,7 @@ def collate_atoms(mol_dicts,
     # molecules along with labels of distance distributions and next type
     for mol in mol_dicts:
         # update molecule dict with random generation trace
-        get_random_walk(mol, seed=seed)
+        get_random_walk(mol, stop_token=stop_token, seed=seed)
 
         # extract information about molecule (and trace)
         pos = mol[Properties.R]
