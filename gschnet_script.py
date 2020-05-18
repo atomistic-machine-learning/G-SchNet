@@ -19,7 +19,7 @@ from schnetpack import Properties
 
 from nn_classes import AtomwiseWithProcessing, EmbeddingMultiplication,\
     NormalizeAndAggregate, KLDivergence
-from qm9gen import QM9gen
+from qm9_data import QM9gen
 from utility_functions import boolean_string, collate_atoms, generate_molecules, \
     update_dict, get_dict_count
 
