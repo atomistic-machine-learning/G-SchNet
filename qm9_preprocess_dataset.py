@@ -326,9 +326,8 @@ def preprocess_dataset(datapath, valence_list, n_threads, n_mols_per_thread=100,
             atoms in each molecule are computed and stored in the database (default:
             True)
         remove_invalid (bool, optional): if True, molecules that do not pass the
-            valency or connectivity check are removed from the new database (note
-            that a precomputed list of invalid molecules determined using the code in
-            this file is fetched from our repository if possible, default: True)
+            valency or connectivity check are removed from the new database (default:
+            True)
         invalid_list (list of int, optional): precomputed list containing indices of
             molecules that are marked as invalid (because they did not pass the
             valency or connectivity checks in earlier runs, default: None)
