@@ -16,16 +16,20 @@ import ase.visualize as asv
 import schnetpack as spk
 from schnetpack.utils import count_params, to_json, read_from_json
 from schnetpack import Properties
+from schnetpack.datasets import DownloadableAtomsData
 
 from nn_classes import AtomwiseWithProcessing, EmbeddingMultiplication,\
     NormalizeAndAggregate, KLDivergence
-from qm9_data import QM9gen
 from utility_functions import boolean_string, collate_atoms, generate_molecules, \
     update_dict, get_dict_count
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+# add your own dataset classes here:
+from qm9_data import QM9gen
+from template_data import TemplateData
+dataset_name_to_class_mapping = {'qm9': QM9gen,
+                                 'template_data': TemplateData}
 
-dataset_name_to_class_mapping = {'qm9': QM9gen}
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
 def get_parser():
@@ -58,7 +62,7 @@ def get_parser():
                                  'default: %(default)s)')
     cmd_parser.add_argument('--precompute_distances', type=boolean_string,
                             default='true',
-                            help='Store precomputed distances in the QM9 database '
+                            help='Store precomputed distances in the database '
                                  'during pre-processing (caution, has no effect if '
                                  'the dataset has already been downloaded, '
                                  'pre-processed, and stored before, '
@@ -68,7 +72,7 @@ def get_parser():
     train_parser = argparse.ArgumentParser(add_help=False,
                                            parents=[cmd_parser])
     train_parser.add_argument('datapath',
-                              help='Path / destination of QM9 dataset '\
+                              help='Path / destination of dataset '\
                                    'directory')
     train_parser.add_argument('modelpath',
                               help='Destination for models and logs')
@@ -144,7 +148,7 @@ def get_parser():
 
     ## evaluation
     eval_parser = argparse.ArgumentParser(add_help=False, parents=[cmd_parser])
-    eval_parser.add_argument('datapath', help='Path of QM9 dataset directory')
+    eval_parser.add_argument('datapath', help='Path of dataset directory')
     eval_parser.add_argument('modelpath', help='Path of stored model')
     eval_parser.add_argument('--split',
                              help='Evaluate trained model on given split',
@@ -633,15 +637,19 @@ def main(args):
         dataclass = dataset_name_to_class_mapping[train_args.dataset_name]
 
         # load the dataset
-        logging.info(f'QM9 will be loaded...')
+        logging.info(f'{train_args.dataset_name} will be loaded...')
         subset = None
         if train_args.subset_path is not None:
             logging.info(f'Using subset from {train_args.subset_path}')
             subset = np.load(train_args.subset_path)
             subset = [int(i) for i in subset]
-        data = dataclass(args.datapath, subset=subset,
-                         precompute_distances=args.precompute_distances,
-                         download=True if args.mode == 'train' else False)
+        if issubclass(dataclass, DownloadableAtomsData):
+            data = dataclass(args.datapath, subset=subset,
+                             precompute_distances=args.precompute_distances,
+                             download=True if args.mode == 'train' else False)
+        else:
+            data = dataclass(args.datapath, subset=subset,
+                             precompute_distances=args.precompute_distances)
 
         # splits the dataset in test, val, train sets
         split_path = os.path.join(args.modelpath, 'split.npz')
