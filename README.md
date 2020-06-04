@@ -5,7 +5,7 @@ Implementation of G-SchNet - a generative model for 3d molecular structures - ac
 
 G-SchNet generates molecules in an autoregressive fashion, placing one atom after another in 3d euclidean space. The model can be trained on data sets with molecules of variable size and composition. It only uses the positions and types of atoms in a molecule, needing no bond-based information such as molecular graphs.
 
-The code provided in this repository allows to train G-SchNet on the QM9 data set which consists of approximately 130k small molecules with up to nine heavy atoms from fluorine, oxygen, nitrogen, and carbon.
+The code provided in this repository allows to train G-SchNet on the QM9 data set which consists of approximately 130k small molecules with up to nine heavy atoms from fluorine, oxygen, nitrogen, and carbon. We provide the pre- and post-processing routines used in our paper's experiments with QM9 molecules in order to make our results reproducible. Although the code and the following guide is very much tailored to QM9, we also provide a few template scripts with basic functionality that can serve as a solid starting point for the application of G-SchNet to other data sets with differently composed molecular structures. The corresponding description can be found at the bottom of this readme after the introduction to the QM9 scripts. 
 
 ### Requirements
 - schnetpack 0.3
@@ -17,22 +17,22 @@ The code provided in this repository allows to train G-SchNet on the QM9 data se
 
 The following commands will create a new conda environment called _"gschnet"_ and install all dependencies (tested on Ubuntu 18.04):
 
-    conda create -n gschnet python=3.7 pytorch=1.3.1 torchvision cudatoolkit=10.1 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
+    conda create -n gschnet python=3.7 pytorch=1.5.0 torchvision cudatoolkit=10.2 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
     conda activate gschnet
     pip install 'schnetpack==0.3'
     
-Replace _"cudatoolkit=10.1"_ with _"cpuonly"_ if you do not want to utilize a GPU for training/generation. However, we strongly recommend to use a GPU if available.
+Replace _"cudatoolkit=10.2"_ with _"cpuonly"_ if you do not want to utilize a GPU for training/generation. However, we strongly recommend to use a GPU if available.
 
 
-# Getting started
+# Getting started with G-SchNet and QM9
 Clone the repository into your folder of choice:
 
     git clone https://github.com/atomistic-machine-learning/G-SchNet.git
 
 ### Training a model
-A model with the same settings as described in the paper can be trained by running gschnet_qm9_script.py with standard parameters:
+A model with the same settings as described in the paper can be trained by running gschnet_script.py with standard parameters:
 
-    python ./G-SchNet/gschnet_qm9_script.py train gschnet ./data/ ./models/gschnet/ --split 50000 5000 --cuda
+    python ./G-SchNet/gschnet_script.py train gschnet ./data/ ./models/gschnet/ --split 50000 5000 --cuda
 
 The training data (QM9) is automatically downloaded and preprocessed if not present in ./data/ and the model will be stored in ./models/gschnet/. 
 With _--split 50000 5000_, 50k molecules are used as the training set, 5k are used for validation, and the remaining structures are left out as a test set.
@@ -41,7 +41,7 @@ We recommend to train on a GPU but you can remove _--cuda_ from the call to use 
 ### Generating molecules
 Running the script with the following arguments will generate 1000 molecules using the trained model at ./model/geschnet/ and store them in ./model/gschnet/generated/generated.mol_dict:
 
-    python ./G-SchNet/gschnet_qm9_script.py generate gschnet ./models/gschnet/ 1000 --cuda
+    python ./G-SchNet/gschnet_script.py generate gschnet ./models/gschnet/ 1000 --cuda
 
 Remove _--cuda_ from the call if you want to run on the CPU. Add _--show_gen_ to display the molecules with ASE after generation. If you are running into problems due to small VRAM, decrease the size of mini-batches during generation (e.g. _--chunk_size 500_, default is 1000).
 
@@ -102,7 +102,7 @@ Additionally, __generated molecules__ allow to use the following properties in s
 | duplicating | this is -1 for all "original" structures (i.e. the first occurence of a generated molecule) and the index of the original structure if the generated molecule is a duplicate (in the default settings only original, i.e. unique, structures are stored in the database) |
 | valid | whether the molecule passed the validity check during filtering (i.e. the valency, connectedness and uniquess checks, in the default settings only valid molecules are stored in the databbase) |
 
-Finally, molecules from the __QM9 training database__ can also be queried for properties available in the QM9 dataset:
+Finally, molecules from the __QM9 training database__ can also be queried for properties available in the QM9 data set:
 
 | property | unit | description |
 |---|---|---|
@@ -121,6 +121,11 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 
 All properties use the ASE-internal units and therefore can easily be converted with ASE. For example, you can get the dipole moment in Debye by multiplying it with 1/ase.units.debye. Similarly, the isotropic polarizability can be converted to Bohr² using 1/ase.units.bohr² and the electronic spatial extent may be obtained in Bohr³ with 1/ase.units.bohr³.
 
+### Training a biased model
+TODO: Coming soon.
+
+# Applying G-SchNet to other data sets
+TODO: Coming soon.
 
 # Citation
 If you are using G-SchNet in your research, please cite the corresponding paper:
@@ -138,9 +143,13 @@ N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d poin
     url = {http://papers.nips.cc/paper/8974-symmetry-adapted-generation-of-3d-point-sets-for-the-targeted-discovery-of-molecules.pdf}
     }
 
+# Trained G-SchNet model
+Here we provide an already trained G-SchNet model ready to be used for molecule generation or further fine-tuning and biasing. The model was trained as described in the paper, using the standard settings of the script and 50k structures from QM9 (as explained in "Training a model" above). Simply extract the folder "gschnet" from the provided zip-file into ./models and continue with the steps described in "Generating molecules" or "Training a biased model" from the guide above. 
+We used an environment with pytorch 1.5.0, cudatoolkit 10.2, and schnetpack 0.3 for training.
+
+[Download here.](http://www.quantum-machine.org/data/trained_gschnet_model.zip)
 
 # Notes
-We recently had to adapt some code due to changes in schnetpack. It is currently tested but should be running fine.
-The repository will be updated with a pre-trained model shortly. We will also explain how a pre-trained model can be fine-tuned in order to bias generation towards a target property (small HOMO-LUMO gap).
+This readme is currently being extended in order to cover all important topics. We will explain how a pre-trained model can be fine-tuned in order to bias generation towards a target property (small HOMO-LUMO gap) and also add the documentation for the template scripts that allow to apply the G-SchNet to data sets other than QM9.
 
 ![more generated molecules](./images/example_molecules_2.png)
