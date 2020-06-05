@@ -38,6 +38,8 @@ The training data (QM9) is automatically downloaded and preprocessed if not pres
 With _--split 50000 5000_, 50k molecules are used as the training set, 5k are used for validation, and the remaining structures are left out as a test set.
 We recommend to train on a GPU but you can remove _--cuda_ from the call to use the CPU instead. If your GPU has less than 16GB VRAM, you need to decrease the number of features (e.g. _--features 64_) or the depth of the network (e.g. _--interactions 6_).
 
+At the bottom of this page, we provide a model trained exactly as described above for download. Feel free to use it instead of training your own model.
+
 ### Generating molecules
 Running the script with the following arguments will generate 1000 molecules using the trained model at ./model/geschnet/ and store them in ./model/gschnet/generated/generated.mol_dict:
 
@@ -46,13 +48,13 @@ Running the script with the following arguments will generate 1000 molecules usi
 Remove _--cuda_ from the call if you want to run on the CPU. Add _--show_gen_ to display the molecules with ASE after generation. If you are running into problems due to small VRAM, decrease the size of mini-batches during generation (e.g. _--chunk_size 500_, default is 1000).
 
 ### Filtering and analysis of generated molecules
-After generation, the generated molecules can be filtered for invalid and duplicate structures by running filter_generated.py:
+After generation, the generated molecules can be filtered for invalid and duplicate structures by running qm9_filter_generated.py:
 
-    python ./G-SchNet/filter_generated.py ./models/gschnet/generated/generated.mol_dict --train_data_path ./data/qm9gen.db --model_path ./models/gschnet
+    python ./G-SchNet/qm9_filter_generated.py ./models/gschnet/generated/generated.mol_dict --train_data_path ./data/qm9gen.db --model_path ./models/gschnet
     
 The script will print its progress and the gathered results. To store them in a file, please redirect the console output to a file (e.g. ./results.txt) and use the _--print_file_ argument when calling the script:
 
-    python ./G-SchNet/filter_generated.py ./models/gschnet/generated/generated.mol_dict --train_data_path ./data/qm9gen.db --model_path ./models/gschnet --print_file >> ./results.txt
+    python ./G-SchNet/qm9_filter_generated.py ./models/gschnet/generated/generated.mol_dict --train_data_path ./data/qm9gen.db --model_path ./models/gschnet --print_file >> ./results.txt
     
 The script checks the valency constraints (e.g. every hydrogen atom should have exactly one bond), the connectedness (i.e. all atoms in a molecule should be connected to each other via a path over bonds), and removes duplicates*. The remaining valid structures are stored in an sqlite database with ASE (at ./models/gschnet/generated/generated_molecules.db) along with an .npz-file that records certain statistics (e.g. the number of rings of certain sizes, the number of single, double, and triple bonds, the index of the matching training/test data molecule etc. for each molecule, see tables below for an overview showing all stored statistics).
 
@@ -122,7 +124,17 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 All properties use the ASE-internal units and therefore can easily be converted with ASE. For example, you can get the dipole moment in Debye by multiplying it with 1/ase.units.debye. Similarly, the isotropic polarizability can be converted to Bohr² using 1/ase.units.bohr² and the electronic spatial extent may be obtained in Bohr³ with 1/ase.units.bohr³.
 
 ### Training a biased model
-TODO: Coming soon.
+The generation of molecules with G-SchNet can be biased towards desired target properties of QM9 molecules. To this end, we fine-tune the weights of an already trained model in a second training run where only a small number of molecules that exhibit the desired target property are used as training data. For example, we biased the generation towards molecules with a small HOMO-LUMO gap in our paper. We found that the pre-training with a large and diverse set of molecules would increase the robustness of the learned model (e.g. increase the number of generated molecules that are valid structures) compared to training on the small subset directly.
+
+The second training run for biasing is started with the same script as the usual training but requires two additional parameters. This is the path to an already trained model that is used to initialize the weights and the path to a file holding the indices of molecules that exhibit the desired target property. Such a file can be obtained using the display_molecules script (see description in the section above, where we extract the indices of all molecules with HOMO-LUMO gap smaller than 4.5 eV).
+
+Assume we have a model that was trained on 50k examples from QM9 at ./models/gschnet and a file with the indices of 3000 molecules that inhibit the desired target property at ./data/subsets/indices.npy, then we can train a biased model with:
+
+    python ./G-SchNet/gschnet_script.py train gschnet ./data/ ./models/biased_gschnet/ --split 2000 500 --cuda --pretrained_path ./models/gschnet --subset_path ./data/subsets/indices.npy
+   
+You will have to adjust _--split_ according to the number of molecules available in the subset. Note that you can also adjust the learning rate parameters with _--lr, --lr_decay, --lr_patience,_ and _--lr_min_, which are 1e-4, 0.5, 10, and 1e-6 per default, respectively. In our paper, we used these standard parameters for the pre-training as well as for the fine-tuning with respect to small HOMO-LUMO gaps, where we had 3.3k molecules for training and 0.5k for validation. If you have significanly less molecules exhibiting the target property, it could be better to decrease the learning rate for the fine-tuning step such that overfitting is prevented as more information from the pre-trained weights is retained. On the contrary, if you have a larger subset of molecules with the target property, training G-SchNet directly on that subset might lead to similarly good results as starting from the pre-trained weights.
+
+After the training has converged, you can sample from the biased distribution and filter generated molecules just as before and described in the previous sections (but of course you need to replace the path to the model directory ./models/geschnet with ./models/biased_gschnet in the arguments when calling the scripts).
 
 # Applying G-SchNet to other data sets
 TODO: Coming soon.
@@ -144,10 +156,15 @@ N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d poin
     }
 
 # Trained G-SchNet model
-Here we provide an already trained G-SchNet model ready to be used for molecule generation or further fine-tuning and biasing. The model was trained as described in the paper, using the standard settings of the script and 50k structures from QM9 (as explained in "Training a model" above). Simply extract the folder "gschnet" from the provided zip-file into ./models and continue with the steps described in "Generating molecules" or "Training a biased model" from the guide above. 
+Here we provide an already trained G-SchNet model ready to be used for molecule generation or further fine-tuning and biasing. The model was trained as described in the paper, using the standard settings of the gschnet_script and 50k structures from QM9 (as explained in "Training a model" above). Simply extract the folder "gschnet" from the provided zip-file into ./models and continue with the steps described in "Generating molecules" or "Training a biased model" from the guide above. 
 We used an environment with pytorch 1.5.0, cudatoolkit 10.2, and schnetpack 0.3 for training.
 
 [Download here.](http://www.quantum-machine.org/data/trained_gschnet_model.zip)
+
+The QM9 training data is usually downloaded and pre-processed as a first step of the training script. If you use our trained model from here instead of training your own model, you might still need the training data (e.g. for visualization or filtering of generated molecules). In this case, you can simply start a dummy training with zero epochs to initialize the data download and remove the dummy model afterwards:
+
+    python ./G-SchNet/gschnet_script.py train gschnet ./data/ ./models/_dummy/ --split 1 1 --max_epochs 0
+    rm -r ./models/_dummy
 
 # Notes
 This readme is currently being extended in order to cover all important topics. We will explain how a pre-trained model can be fine-tuned in order to bias generation towards a target property (small HOMO-LUMO gap) and also add the documentation for the template scripts that allow to apply the G-SchNet to data sets other than QM9.
