@@ -109,11 +109,11 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 | property | unit | description |
 |---|---|---|
 | dipole_moment | e*Ångström | length of the dipole moment |
-| isotropic_polarizability | Ångström² | isotropic polarizability |
+| isotropic_polarizability | Ångström³ | isotropic polarizability |
 | homo | eV | energy of highest occupied molecular orbital (HOMO) |
 | lumo | eV | energy of lowest unoccupied molecular orbital (LUMO) |
 | gap | eV | energy difference between the HOMO and LUMO (HOMO-LUMO gap) |
-| electronic_spatial_extent | Ångström³ | electronic spatial extent |
+| electronic_spatial_extent | Ångström² | electronic spatial extent |
 | zpve | eV | zero point vibrational energy |
 | energy_U0 | eV | internal energy at 0 K |
 | energy_U | eV | internal energy at 298.15 K |
@@ -121,7 +121,7 @@ Finally, molecules from the __QM9 training database__ can also be queried for pr
 | free_energy | eV | free energy at 298.15 K |
 | heat_capacity | cal/(molK) | heat capacity at 298.15 K |
 
-All properties use the ASE-internal units and therefore can easily be converted with ASE. For example, you can get the dipole moment in Debye by multiplying it with 1/ase.units.Debye. Similarly, the isotropic polarizability can be converted to Bohr² using 1/ase.units.Bohr² and the electronic spatial extent may be obtained in Bohr³ with 1/ase.units.Bohr³.
+All properties use the ASE-internal units and therefore can easily be converted with ASE. For example, you can get the dipole moment in Debye by multiplying it with 1/ase.units.Debye. Similarly, the isotropic polarizability can be converted to Bohr³ using 1/ase.units.Bohr³ and the electronic spatial extent may be obtained in Bohr² with 1/ase.units.Bohr².
 
 ### Training a biased model
 The generation of molecules with G-SchNet can be biased towards desired target properties of QM9 molecules. To this end, the weights of an already trained model are fine-tuned in a second training run where only a small number of molecules that exhibit the desired target property is used as training data. For example, we biased the generation towards molecules with a small HOMO-LUMO gap in our paper. We found that the pre-training with a large and diverse set of molecules would increase the robustness of the learned model (e.g. increase the number of generated molecules that are valid structures) compared to training on the small subset directly.
