@@ -142,7 +142,7 @@ _Disclaimer: Since the code was mainly written to run experiments on QM9, experi
 
 In the following we will describe the provided template scripts and how they could be adjusted in order to use our implementation of G-SchNet on data sets other than QM9. There are three relevant files, template_data.py, template_preprocess_dataset.py, and template_filter_generated.py. They take care of loading the data, pre-processing the data, and filtering molecules after generation, respectively.
 
-### Loading data
+### Adjusting the template data class
 
 The file template_data.py contains a template data class that loads molecules from an sq-lite database assembled with ASE. It already provides all the necessary functionality to run with gschnet_script.py (e.g. using only subsets of data, splitting of the data set, initialisation of pre-processing etc.). However, a few basic properties of the used data set must be coded as static class variables that can be found at the top of the class definition. These are the name of the original data base file (db_name), the desired name of the data base file after pre-processing (preprocessed_db_name), a list of all the atom types that occur in the data base (available_atom_types), the valence constraints of these types (atom_types_valence, currently not used, can safely be set to None), and the minimum and maximum distance between two atoms that are considered as neighbors for the data set (radial_limits). Note that the setting for the radial_limits here will determine which atoms are considered to be connected when calculating connectivity matrices during pre-processing as well as the extent of the radial grid around the focus token used during generation.
 
