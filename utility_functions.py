@@ -861,8 +861,7 @@ def get_default_neighbors(n_atoms):
     Returns:
         list of list of int: the indices of the neighbors of each atom
     '''
-    return [list(range(0, i)) + list(range(i + 1, n_atoms - 1))
-            for i in range(0, n_atoms - 1)]
+    return [list(range(0, i)) + list(range(i + 1, n_atoms)) for i in range(0, n_atoms)]
 
 
 def generate_molecules(amount,
@@ -961,7 +960,7 @@ def generate_molecules(amount,
     start_grid = torch.tensor(start_grid).float().to(device)  # small start grid
 
     # create default neighborhood list
-    neighbors = torch.tensor(get_default_neighbors(max_length)).long().to(device)
+    neighbors = torch.tensor(get_default_neighbors(max_length-1)).long().to(device)
 
     # create dictionary in which generated molecules will be stored (where the key
     # will be the number of atoms in the respective generated molecule)
