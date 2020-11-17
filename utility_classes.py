@@ -595,7 +595,7 @@ class Molecule:
                     else:
                         n_bigger_8 += ring_counts[i]
                 if n_bigger_8 > 0:
-                    d[f'R>8'] = ring_counts[i]
+                    d[f'R>8'] = n_bigger_8
             self._bond_stats = d
 
         return self._bond_stats
