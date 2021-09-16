@@ -181,7 +181,7 @@ If you need help to train G-SchNet on your own data, don't hesitate to open an i
 # Citation
 If you are using G-SchNet in your research, please cite the corresponding paper:
 
-N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, _Advances in Neural Information Processing Systems 32_, pages 7564–7576. Curran Associates, Inc., 2019.
+N. Gebauer, M. Gastegger, and K. Schütt. Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, _Advances in Neural Information Processing Systems 32_, pages 7566–7578. Curran Associates, Inc., 2019.
 
     @incollection{NIPS2019_8974,
     title = {Symmetry-adapted generation of 3d point sets for the targeted discovery of molecules},
