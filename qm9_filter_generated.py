@@ -559,8 +559,8 @@ def check_valency(positions, numbers, valence, filter_by_valency=True,
         numbers (numpy.ndarray): list of nuclear charges/types of atoms
             (e.g. 1 for hydrogens, 6 for carbons etc.) for each molecule
         valence (numpy.ndarray): list of valency of each atom type where the index in
-            the list corresponds to the type (e.g. [0, 1, 0, 0, 0, 0, 2, 3, 4, 1] for
-            qm9 molecules as H=type 1 has valency of 1, O=type 6 has valency of 2,
+            the list corresponds to the type (e.g. [0, 1, 0, 0, 0, 0, 4, 3, 2, 1] for
+            qm9 molecules as H=type 1 has valency of 1, C=type 6 has valency of 4,
             N=type 7 has valency of 3 etc.)
         filter_by_valency (bool, optional): whether molecules that fail the valency
             check should be marked as invalid, else all input molecules will be
