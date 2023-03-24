@@ -19,7 +19,7 @@ The code provided in this repository allows to train G-SchNet on the QM9 data se
 
 The following commands will create a new conda environment called _"gschnet"_ and install all dependencies (tested on Ubuntu 18.04):
 
-    conda create -n gschnet python=3.7 pytorch=1.5.0 torchvision cudatoolkit=10.2 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
+    conda create -n gschnet python=3.7 pytorch=1.5.1 torchvision cudatoolkit=10.2 ase=3.19.0 openbabel=2.4.1 rdkit=2019.09.2.0 -c pytorch -c openbabel -c defaults -c conda-forge
     conda activate gschnet
     pip install 'schnetpack==0.3'
     
